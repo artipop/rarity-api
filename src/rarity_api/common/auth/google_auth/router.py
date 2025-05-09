@@ -25,9 +25,9 @@ from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi.responses import RedirectResponse
 from rarity_api.common.auth.schemas.token import TokenFromIDProvider
 from rarity_api.common.auth.services.auth_service import AuthService
-from rarity_api.database import get_session
-from rarity_api.google_auth.dependencies import state_storage, validate_id_token
-from rarity_api.google_auth.utils.requests import exchage_code_to_tokens
+from rarity_api.core.database.connector import get_session
+from rarity_api.common.auth.google_auth.dependencies import state_storage, validate_id_token
+from rarity_api.common.auth.google_auth.utils.requests import exchage_code_to_tokens
 from rarity_api.settings import settings
 
 router = APIRouter(

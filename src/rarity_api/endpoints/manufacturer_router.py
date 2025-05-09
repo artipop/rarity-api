@@ -3,9 +3,12 @@ from typing import List
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from rarity_api.database import get_session
 from rarity_api.endpoints.datas import ManufacturerData, CityData
-from rarity_api.endpoints.repos import Manufacturer, ManufacturerRepository
+
+# refactored 
+from rarity_api.core.database.connector import get_session
+from rarity_api.core.database.models.models import Manufacturer
+from rarity_api.core.database.repos.repos import ManufacturerRepository
 
 router = APIRouter(
     prefix="/manufacturers",

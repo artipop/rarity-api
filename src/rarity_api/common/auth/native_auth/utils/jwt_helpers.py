@@ -5,7 +5,7 @@ from typing import Dict, Union
 import jwt
 from rarity_api.common.auth.exceptions import AuthException
 from rarity_api.common.auth.schemas.user import UserRead
-from rarity_api.native_auth.schemas.user import UserFromToken
+from rarity_api.common.auth.native_auth.schemas.user import UserFromToken
 from rarity_api.settings import settings
 
 TOKEN_TYPE_FIELD = "type"

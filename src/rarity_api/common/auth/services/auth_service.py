@@ -1,20 +1,23 @@
 import datetime
 
 from rarity_api.common.auth.exceptions import AuthException
-from rarity_api.common.auth.repositories.auth_credentials_repository import AuthCredentialsRepository
-from rarity_api.common.auth.repositories.token_repository import TokenRepository
-from rarity_api.common.auth.repositories.user_repository import UserRepository
+
+from rarity_api.core.database.repos.repos import AuthCredentialsRepository
+from rarity_api.core.database.repos.repos import UserRepository
+from rarity_api.core.database.repos.repos import TokenRepository
+
+
 from rarity_api.common.auth.schemas.auth_credentials import AuthCredentialsCreate
 from rarity_api.common.auth.schemas.token import TokenFromIDProvider, TokenCreate, TokenRead, TokenType
 from rarity_api.common.auth.schemas.user import UserCreate, UserRead, UserInDB
 from rarity_api.common.auth.utils import AuthType
-from rarity_api.google_auth.schemas.oidc_user import UserInfoFromIDProvider
-from rarity_api.native_auth.schemas.user import (
+from rarity_api.common.auth.google_auth.schemas.oidc_user import UserInfoFromIDProvider
+from rarity_api.common.auth.native_auth.schemas.user import (
     UserCreatePlainPassword,
     UserCreateHashedPassword,
 )
-from rarity_api.subs.models import Subscription
-from rarity_api.subs.subscription_repository import SubscriptionRepository
+from rarity_api.core.database.models.models import Subscription
+from rarity_api.core.database.repos.repos import SubscriptionRepository
 
 
 class AuthService:

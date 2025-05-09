@@ -2,11 +2,11 @@ from fastapi import APIRouter, Depends, Response
 from rarity_api.common.auth.schemas.token import TokenType
 from rarity_api.common.auth.schemas.user import UserRead
 from rarity_api.common.auth.services.auth_service import AuthService
-from rarity_api.database import get_session
-from rarity_api.native_auth.dependencies import valiadate_auth_user, authenticate
-from rarity_api.native_auth.schemas.user import UserCreatePlainPassword, UserCreateHashedPassword, UserChangePassword
-from rarity_api.native_auth.utils.jwt_helpers import create_access_token, create_refresh_token
-from rarity_api.native_auth.utils.password_helpers import hash_password
+from rarity_api.core.database.connector import get_session
+from rarity_api.common.auth.native_auth.dependencies import valiadate_auth_user, authenticate
+from rarity_api.common.auth.native_auth.schemas.user import UserCreatePlainPassword, UserCreateHashedPassword, UserChangePassword
+from rarity_api.common.auth.native_auth.utils.jwt_helpers import create_access_token, create_refresh_token
+from rarity_api.common.auth.native_auth.utils.password_helpers import hash_password
 
 router = APIRouter(
     prefix="/plain",

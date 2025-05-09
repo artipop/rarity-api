@@ -3,3 +3,9 @@ dev:
 
 kill:
 	taskkill /f /im python.exe
+
+rev:
+	poetry run alembic revision --autogenerate
+
+mig:
+	poetry run alembic upgrade head

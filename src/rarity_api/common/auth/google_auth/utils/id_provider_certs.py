@@ -1,6 +1,6 @@
 from rarity_api.common.auth.exceptions import AuthException
 from rarity_api.common.singleton import singleton
-from rarity_api.google_auth.utils.requests import get_certs
+from rarity_api.common.auth.google_auth.utils.requests import get_certs
 
 
 @singleton

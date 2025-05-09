@@ -7,11 +7,11 @@ from rarity_api.common.auth.exceptions import AuthException
 from rarity_api.common.auth.schemas.token import TokenType
 from rarity_api.common.auth.services.auth_service import AuthService
 from rarity_api.common.logger import logger
-from rarity_api.database import get_session
-from rarity_api.google_auth.schemas.oidc_user import UserInfoFromIDProvider
-from rarity_api.google_auth.utils.id_provider_certs import IdentityProviderCerts
-from rarity_api.google_auth.utils.requests import get_new_tokens, revoke_token
-from rarity_api.google_auth.utils.state_storage import StateStorage
+from rarity_api.core.database.connector import get_session
+from rarity_api.common.auth.google_auth.schemas.oidc_user import UserInfoFromIDProvider
+from rarity_api.common.auth.google_auth.utils.id_provider_certs import IdentityProviderCerts
+from rarity_api.common.auth.google_auth.utils.requests import get_new_tokens, revoke_token
+from rarity_api.common.auth.google_auth.utils.state_storage import StateStorage
 from rarity_api.settings import settings
 
 state_storage = StateStorage()  # TODO(weldonfe): refactor somehow later, maybe to Redis storage?

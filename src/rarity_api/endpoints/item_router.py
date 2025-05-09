@@ -4,9 +4,12 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import Response
 
-from rarity_api.database import get_session
 from rarity_api.endpoints.datas import ItemData, SearchHistoryCreate, ItemFullData
-from rarity_api.endpoints.repos import Item, ItemRepository, SearchHistoryRepository
+
+# refactored
+from rarity_api.core.database.connector import get_session
+from rarity_api.core.database.models.models import Item
+from rarity_api.core.database.repos.repos import ItemRepository, SearchHistoryRepository
 
 router = APIRouter(
     prefix="/items",

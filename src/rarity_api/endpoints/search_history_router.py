@@ -3,9 +3,10 @@ from typing import List
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from rarity_api.database import get_session
 from rarity_api.endpoints.datas import SearchHistoryData, SearchHistoryCreate
-from rarity_api.endpoints.repos import SearchHistoryRepository
+
+from rarity_api.core.database.connector import get_session
+from rarity_api.core.database.repos.repos import SearchHistoryRepository
 
 router = APIRouter(
     prefix="/search_history",

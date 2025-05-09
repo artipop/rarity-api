@@ -11,9 +11,9 @@ from rarity_api.endpoints.item_router import router as item_router
 from rarity_api.endpoints.manufacturer_router import router as manufacturer_router
 from rarity_api.endpoints.region_router import router as region_router
 from rarity_api.endpoints.search_history_router import router as search_history_router
-from rarity_api.google_auth.router import router as google_auth_router
-from rarity_api.google_auth.utils.id_provider_certs import IdentityProviderCerts
-from rarity_api.native_auth.router import router as plain_auth_router
+from rarity_api.common.auth.google_auth.router import router as google_auth_router
+from rarity_api.common.auth.google_auth.utils.id_provider_certs import IdentityProviderCerts
+from rarity_api.common.auth.native_auth.router import router as plain_auth_router
 
 app = FastAPI(
     title="Rarity API",

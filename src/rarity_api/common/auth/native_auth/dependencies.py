@@ -6,15 +6,16 @@ from rarity_api.common.auth.schemas.user import UserRead, UserInDB
 from rarity_api.common.auth.services.auth_service import AuthService
 from rarity_api.common.auth.utils import decode_jwt_without_verification
 from rarity_api.common.logger import logger
-from rarity_api.database import get_session
-from rarity_api.native_auth.schemas.user import UserLogin, UserFromToken
-from rarity_api.native_auth.utils.jwt_helpers import create_access_token
-from rarity_api.native_auth.utils.jwt_helpers import (
+from rarity_api.core.database.connector import get_session
+
+from rarity_api.common.auth.native_auth.schemas.user import UserLogin, UserFromToken
+from rarity_api.common.auth.native_auth.utils.jwt_helpers import create_access_token
+from rarity_api.common.auth.native_auth.utils.jwt_helpers import (
     decode_jwt,
     TokenType,
     TOKEN_TYPE_FIELD
 )
-from rarity_api.native_auth.utils.password_helpers import validate_password
+from rarity_api.common.auth.native_auth.utils.password_helpers import validate_password
 
 
 async def authenticate(id_token: str, response: Response, session=Depends(get_session)):

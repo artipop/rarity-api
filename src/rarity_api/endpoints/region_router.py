@@ -3,9 +3,11 @@ from typing import List
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from rarity_api.database import get_session
 from rarity_api.endpoints.datas import RegionData
-from rarity_api.endpoints.repos import Region, RegionRepository
+
+from rarity_api.core.database.connector import get_session
+from rarity_api.core.database.models.models import Region
+from rarity_api.core.database.repos.repos import RegionRepository
 
 router = APIRouter(
     prefix="/regions",

@@ -6,7 +6,7 @@ from pydantic import (
     BaseModel
 )
 
-base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 1
 REFRESH_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7
@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     project_title: str = Field(alias="PROJECT_TITLE")
     api_base_url: str = Field(alias="API_BASE_URL")
     
+    fastapi_host: str = Field(alias="FASTAPI_HOST")
+    fastapi_port: str = Field(alias="FASTAPI_PORT")
+
     postgres_user: str = Field(alias="POSTGRES_USER")
     postgres_password: str = Field(alias="POSTGRES_PASSWORD")
     postgres_db: str = Field(alias="POSTGRES_DB")
