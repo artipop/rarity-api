@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     project_title: str = Field(alias="PROJECT_TITLE")
     api_base_url: str = Field(alias="API_BASE_URL")
     
+    yandex_client_id: str = Field(alias="YANDEX_CLIENT_ID")
+    yandex_client_secret: str = Field(alias="YANDEX_CLIENT_SECRET")
+
     fastapi_host: str = Field(alias="FASTAPI_HOST")
     fastapi_port: str = Field(alias="FASTAPI_PORT")
 

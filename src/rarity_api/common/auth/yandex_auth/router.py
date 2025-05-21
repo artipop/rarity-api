@@ -2,10 +2,10 @@ import httpx
 from fastapi import HTTPException, APIRouter
 from starlette.requests import Request
 from starlette.responses import RedirectResponse, JSONResponse
-
-CLIENT_ID = 'your_client_id'
-CLIENT_SECRET = 'your_client_secret'
-REDIRECT_URI = 'http://localhost:8000/callback'
+from rarity_api.settings import settings
+CLIENT_ID = settings.yandex_client_id
+CLIENT_SECRET = settings.yandex_client_secret
+REDIRECT_URI = 'http://localhost:8000/yandex/auth/callback'
 AUTH_URL = 'https://oauth.yandex.ru/authorize'
 TOKEN_URL = 'https://oauth.yandex.ru/token'
 
@@ -23,7 +23,7 @@ async def login():
     return RedirectResponse(url=auth_url)
 
 
-@router.get("/callback")
+@router.get("/auth/callback")
 async def callback(request: Request):
     code = request.query_params.get('code')
     if not code:

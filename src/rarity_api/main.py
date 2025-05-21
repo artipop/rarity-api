@@ -5,6 +5,7 @@ from alembic.config import Config
 from fastapi import FastAPI
 from sqladmin import Admin
 
+from rarity_api.common.auth.yandex_auth.router import router as yandex_router
 from rarity_api.admin.user_admin import UserAdmin
 from rarity_api.common.http_client import HttpClient
 from rarity_api.core.database.connector import get_engine_sync
@@ -33,6 +34,7 @@ app.include_router(city_router)
 app.include_router(manufacturer_router)
 app.include_router(item_router)
 app.include_router(search_history_router)
+app.include_router(yandex_router)
 
 admin = Admin(app, get_engine_sync())
 admin.add_view(UserAdmin)
