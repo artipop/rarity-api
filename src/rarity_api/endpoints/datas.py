@@ -65,9 +65,3 @@ class SearchHistoryData(BaseModel):
     country_name: str | None
     manufacturer_name: str | None
     created_at: datetime
-
-
-class SearchHistoryCreate(BaseModel):
-    region_name: str | None = None
-    country_name: str | None = None
-    manufacturer_name: str | None = None

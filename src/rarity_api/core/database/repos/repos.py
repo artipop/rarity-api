@@ -178,6 +178,40 @@ class ItemRepository(AbstractRepository):
         result = await self._session.execute(stmt)
         return result.scalars().all()
 
+    async def find_by_id(self, item_id: int) -> Item | None:
+        s = select(Item).where(Item.id == item_id)
+        result = await self._session.execute(s)
+        return result.scalars().first()
+
+    async def update(self, obj: Item):
+        self._session.add(obj)
+        await self._session.commit()
+        await self._session.refresh(obj)
+
+    async def add_to_favourites(self, user_id, item_id):
+        user = await self._session.get(models.User, user_id)
+        item = await self._session.get(Item, item_id)
+        if user and item and item not in user.favourite_items:
+            user.favourite_items.append(item)
+            await self._session.commit()
+            await self._session.refresh(user)
+        return item
+
+    async def remove_from_favourites(self, user_id, item_id):
+        user = await self._session.get(models.User, user_id)
+        item = await self._session.get(Item, item_id)
+        if user and item and item in user.favourite_items:
+            user.favourite_items.remove(item)
+            await self._session.commit()
+            await self._session.refresh(user)
+        return item
+
+    async def get_favourites(self, user_id):
+        user = await self._session.get(models.User, user_id)
+        if user:
+            return user.favourite_items
+        return []
+
     async def find_by_book_ids(self, ids: list[int]) -> Sequence[Item]:
         s = select(Item)
         if ids:
@@ -200,7 +234,7 @@ class SearchHistoryRepository(AbstractRepository):
         result = await self._session.execute(s)
         return result.scalars().all()
 
-    async def find_by_id(self, _id: int) -> SearchHistory | None:
-        s = select(SearchHistory).where(SearchHistory.id == _id)
+    async def find_by_id(self, hist_id: int) -> SearchHistory | None:
+        s = select(SearchHistory).where(SearchHistory.id == hist_id)
         result = await self._session.execute(s)
         return result.scalars().first()

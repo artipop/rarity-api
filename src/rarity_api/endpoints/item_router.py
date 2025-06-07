@@ -5,11 +5,13 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import Response
 
-from rarity_api.endpoints.datas import ItemData, SearchHistoryCreate, ItemFullData, FindByImageData
+from rarity_api.endpoints.datas import ItemData, ItemFullData, FindByImageData
 
 from rarity_api.core.database.connector import get_session
 from rarity_api.core.database.models.models import Item, SearchHistory
 from rarity_api.core.database.repos.repos import ItemRepository, SearchHistoryRepository
+from rarity_api.common.auth.dependencies import authenticate
+from rarity_api.common.auth.schemas.user import UserRead
 from rarity_api.settings import settings
 
 router = APIRouter(
@@ -51,17 +53,19 @@ async def get_item(
     item = await repository.find_by_id(item_id)
     if not item:
         return Response(status_code=404)
-    return mapping(item)
+    # TODO!!! join all the countries and so on
+    # return mapping_full(item)
 
 
 
 @router.put("/{item_id}/markfav")
 async def mark_favourite(
         item_id: int,
+        user: UserRead = Depends(authenticate),
         session: AsyncSession = Depends(get_session)
 ) -> ItemData:
     repository = ItemRepository(session)
-    item = await repository.find_by_id(item_id)
+    item = await repository.add_to_favourites(user.id, item_id)
     if not item:
         return Response(status_code=404)
     return mapping(item)
@@ -69,11 +73,12 @@ async def mark_favourite(
 
 @router.get("/favourites")
 async def list_favourites(
+        user: UserRead = Depends(authenticate),
         session: AsyncSession = Depends(get_session)
 ) -> List[ItemData]:
     repository = ItemRepository(session)
-    # ...
-    # return [mapping(item) for item in items]
+    items = await repository.get_favourites(user.id)
+    return [mapping(item) for item in items]
 
 
 @router.post("/find_by_image")
@@ -99,11 +104,9 @@ async def find_by_image(
 
 
 def mapping(item: Item) -> ItemData:
-
     years_array = item.production_years.split(" - ")
     years_end = int(years_array[1] if years_array[1] != "now" else 0)
     print(years_array)
-
     return ItemData(
         id=item.id,
         rp=item.rp,
@@ -111,5 +114,7 @@ def mapping(item: Item) -> ItemData:
         description=item.description,
         year_from=int(years_array[0] if years_array[0] != "None" else 0),
         year_to=years_end,
+        is_favourite=False,  # TODO
+        # image=item.photo_links
         image=f"{settings.api_base_url}/api/images/mark_{item.rp}.png" if item.rp else None,
     )

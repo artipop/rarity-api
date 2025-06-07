@@ -30,6 +30,13 @@ manufacturer_city_association = Table(
     Column('city_id', Integer, ForeignKey('cities.id'), primary_key=True)
 )
 
+# Таблица для связи многие-ко-многим между User и Item (FavouriteItems)
+favourite_items_association = Table(
+    'favourite_items', Base.metadata,
+    Column('user_id', UUID, ForeignKey('users.id'), primary_key=True),
+    Column('item_id', Integer, ForeignKey('items.id'), primary_key=True)
+)
+
 class User(Base):
     __tablename__ = 'users'
     id: Mapped[UUID] = mapped_column(UUID, primary_key=True, default=uuid.uuid4)
@@ -43,6 +50,11 @@ class User(Base):
     subscription = relationship("Subscription", back_populates="user")
     tokens = relationship("Token", back_populates="user")
     auth_credentials = relationship("AuthCredentials", back_populates="user")
+    favourite_items = relationship(
+        "Item",
+        secondary=favourite_items_association,
+        back_populates="favourited_by_users"
+    )
 
 
 
@@ -86,6 +98,11 @@ class Item(Base):
     photo_links: Mapped[Optional[str]]  # Можно хранить ссылки в формате JSON
     manufacturer_id: Mapped[int] = mapped_column(Integer, ForeignKey('manufacturers.id'), nullable=False)
     manufacturer: Mapped["Manufacturer"] = relationship("Manufacturer", back_populates="items")
+    favourited_by_users = relationship(
+        "User",
+        secondary=favourite_items_association,
+        back_populates="favourite_items"
+    )
 
 class Token(Base):
     __tablename__ = 'tokens'
