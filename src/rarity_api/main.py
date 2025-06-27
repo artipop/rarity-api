@@ -1,12 +1,15 @@
 from contextlib import asynccontextmanager
+import sys
+from pathlib import Path
 
+# Добавляем src/ в PYTHONPATH
+sys.path.append(str(Path(__file__).parent.parent))
 from alembic import command
 from alembic.config import Config
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from sqladmin import Admin
 
-from rarity_api.common.auth.yandex_auth.router import router as yandex_router
 from rarity_api.admin.user_admin import UserAdmin
 from rarity_api.common.http_client import HttpClient
 from rarity_api.core.database.connector import get_engine_sync
@@ -23,6 +26,7 @@ from rarity_api.common.auth.native_auth.router import router as plain_auth_route
 from rarity_api.endpoints.user_router import router as user_router
 from rarity_api.endpoints.payment_router import router as payment_router
 from rarity_api.settings import settings
+from rarity_api.common.auth.yandex_auth.router import router as yandex_router
 from starlette.middleware.cors import CORSMiddleware
 
 app = FastAPI(

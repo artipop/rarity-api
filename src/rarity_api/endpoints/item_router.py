@@ -2,13 +2,14 @@ from typing import List
 
 import requests
 from fastapi import APIRouter, Depends
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import Response
 
 from rarity_api.endpoints.datas import ItemData, SearchHistoryCreate, ItemFullData, FindByImageData, SearchResponse
 
 from rarity_api.core.database.connector import get_session
-from rarity_api.core.database.models.models import Item, SearchHistory
+from rarity_api.core.database.models.models import Country, Item, Manufacturer, SearchHistory, Symbol
 from rarity_api.core.database.repos.repos import ItemRepository, SearchHistoryRepository
 from rarity_api.settings import settings
 
@@ -40,16 +41,44 @@ async def get_items(
     history_repository = SearchHistoryRepository(session)
     await history_repository.create(search_history)
     repository = ItemRepository(session)
-    items = await repository.find_items(page, offset, region=region_name, country=country_name, manufacturer=manufacturer_name)
+    items = await repository.find_items(page, offset, region=region_name, country=country_name, manufacturer=manufacturer_name, symbol_name=symbol_name)
     return [mapping(item) for item in items]
 
 
-@router.get("/search")
+@router.get("/search", response_model=None)
 async def find_symbols(
         query: str = None,
         session: AsyncSession = Depends(get_session),
 ) -> SearchResponse:
-    return SearchResponse(countries=[], manufacturers=[], symbols=[])
+    
+    country_query = (
+        select(Country.name)
+        .where(Country.name.ilike(f"%{query}%"))
+    )
+
+    manufacturer_query = (
+        select(Manufacturer.name)
+        .where(Manufacturer.name.ilike(f"%{query}%"))
+    )
+
+    symbol_query = (
+        select(Symbol.name)
+        .where(Symbol.name.ilike(f"%{query}%"))
+    )
+
+    country_result = await session.execute(country_query)
+    manufacturer_result = await session.execute(manufacturer_query)
+    symbol_result = await session.execute(symbol_query)
+
+    countries = country_result.scalars().all()
+    manufacturers = manufacturer_result.scalars().all()
+    symbols = symbol_result.scalars().all()
+
+    return SearchResponse(
+        countries=countries,
+        manufacturers=manufacturers,
+        symbols=symbols
+    )
 
 
 @router.get("/{item_id}")

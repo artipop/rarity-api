@@ -19,7 +19,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import declarative_base, relationship, Mapped, mapped_column
 
-from src.rarity_api.core.database.repos.abstract_repo import AbstractRepository
+from rarity_api.core.database.repos.abstract_repo import AbstractRepository
 
 Base = declarative_base()
 
@@ -142,3 +142,28 @@ class Subscription(Base):
 
     user_id: Mapped[UUID] = mapped_column(UUID, ForeignKey('users.id'))
     user = relationship('User', back_populates='subscription')
+
+class Symbol(Base):
+    __tablename__ = "symbols"
+    id: Mapped[UUID] = mapped_column(UUID, primary_key=True, default=uuid.uuid4)
+    name: Mapped[Optional[str]]
+
+    rps: Mapped[List["SymbolRp"]] = relationship("SymbolRp", back_populates="symbol")
+
+class SymbolRp(Base):
+    __tablename__ = "symbols_rp"
+    id: Mapped[UUID] = mapped_column(UUID, primary_key=True, default=uuid.uuid4)
+    symbol_id: Mapped[UUID] = mapped_column(UUID, ForeignKey("symbols.id", ondelete="SET NULL"))
+    rp: Mapped[int]
+
+    symbol: Mapped["Symbol"] = relationship("Symbol", back_populates="rps")
+
+
+class SymbolsLocale(Base):
+    __tablename__ = "symbols_locale"
+    id: Mapped[UUID] = mapped_column(UUID, primary_key=True, default=uuid.uuid4)
+    symbol_id: Mapped[UUID] = mapped_column(UUID, ForeignKey("symbols.id", ondelete="SET NULL"))
+    translit: Mapped[Optional[str]]
+    locale_de: Mapped[Optional[str]]
+    locale_ru: Mapped[Optional[str]]
+    locale_en: Mapped[Optional[str]]

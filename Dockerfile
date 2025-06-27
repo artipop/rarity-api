@@ -24,6 +24,6 @@ RUN poetry install --no-root
 
 # Очищаем кэш
 RUN apt-get purge -y && rm -rf /var/lib/apt/lists/*
-ENV PYTHONPATH="${PYTHONPATH}:/app/rarityapi/src"
+# ENV PYTHONPATH="${PYTHONPATH}:/app/rarityapi/src"
 # Копируем приложение
 COPY . /app/rarityapi/

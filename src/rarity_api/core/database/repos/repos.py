@@ -8,8 +8,18 @@ from rarity_api.common.auth.schemas.token import TokenCreate
 from rarity_api.common.auth.schemas.user import UserCreate
 from rarity_api.common.auth.google_auth.schemas.oidc_user import UserInfoFromIDProvider
 from rarity_api.core.database.models import models
-from rarity_api.core.database.models.models import Country, City, Manufacturer, Region, Item, SearchHistory
+from rarity_api.core.database.models.models import Country, City, Manufacturer, Region, Item, SearchHistory, Symbol, SymbolRp
 from rarity_api.core.database.repos.abstract_repo import AbstractRepository
+
+
+class SymbolRpRepository(AbstractRepository):
+    model = models.SymbolRp
+
+class SymbolsRepository(AbstractRepository):
+    model = models.Symbol
+
+class SymbolsLocaleRepository(AbstractRepository):
+    model = models.SymbolsLocale
 
 class SubscriptionRepository(AbstractRepository):
     model = models.Subscription
@@ -163,30 +173,58 @@ class ItemRepository(AbstractRepository):
     model = Item
 
     async def find_items(
-            self,
-            page: int,
-            offset: int,
-            # city: str | None = None,
-            region: str | None = None,
-            country: str | None = None,
-            manufacturer: str | None = None
+        self,
+        page: int,
+        offset: int,
+        region: str | None = None,
+        country: str | None = None,
+        manufacturer: str | None = None,
+        symbol_name: str | None = None
     ):
+    # Сначала получаем список RP для символа (если передан symbol_name)
+        rp_list = []
+        if symbol_name:
+            symbol_query = (
+                select(Symbol)
+                .where(Symbol.name == symbol_name)
+                .options(selectinload(Symbol.rps))
+            )
+            symbol_result = await self._session.execute(symbol_query)
+            symbols = symbol_result.scalars().all()
+            
+            # Собираем все RP из связанных SymbolRp
+            for symbol in symbols:
+                for symbol_rp in symbol.rps:
+                    rp_list.append(symbol_rp.rp)
+        
+        # Базовый запрос с джойном производителя
         stmt = select(Item).join(Item.manufacturer).limit(offset).offset((page - 1) * offset)
-        # if country or region or city:
+        
+        # Фильтрация по географии (через города производителя)
         if country or region:
             stmt = stmt.join(Manufacturer.cities).join(City.region).join(Region.country)
         if country:
             stmt = stmt.where(Country.name == country)
         if region:
             stmt = stmt.where(Region.name == region)
-        # if city:
-        #     stmt = stmt.where(City.name == city)
+        
+        # Фильтрация по производителю
         if manufacturer:
             stmt = stmt.where(Manufacturer.name == manufacturer)
+        
+        # Фильтрация по RP из символа
+        if symbol_name:
+            if rp_list:
+                stmt = stmt.where(Item.rp.in_(rp_list))
+            else:
+                # Если символ не найден, возвращаем пустой результат
+                stmt = stmt.where(1 == 0)  # Always false condition
+        
+        # Загрузка связанных данных
         stmt = stmt.options(
             selectinload(Item.manufacturer).selectinload(Manufacturer.cities)
         )
-
+        
         result = await self._session.execute(stmt)
         return result.scalars().all()
 

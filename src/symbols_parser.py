@@ -1,8 +1,11 @@
 import asyncio
+import os
 import sqlite3
 import re
 
 from rarity_api.core.database.connector import get_session
+from rarity_api.core.database.models.models import Symbol, SymbolRp
+from rarity_api.core.database.repos.repos import SymbolRpRepository, SymbolsRepository
 
 # --- Подключение к базе ---
 # conn = sqlite3.connect("symbols.db")
@@ -20,7 +23,7 @@ from rarity_api.core.database.connector import get_session
 
 # --- Чтение из файла ---
 entries = []
-with open("excels/symbol_index.txt", "r", encoding="utf-8") as file:
+with open(f"{os.path.dirname(__file__)}\\excels\\symbol_index.txt", "r", encoding="utf-8") as file:
     buffer = ""
     for line in file:
         line = line.strip()
@@ -59,14 +62,20 @@ async def main():
         for entry in entries:
             match = re.match(r'^(.+?)\s+([\d,\-\s]+)$', entry)
             if not match:
-                print(f"❌ Не удалось разобрать: {entry}")
                 continue
             name = match.group(1).strip()
             nums = parse_numbers(match.group(2))
-            print(nums)
-            # for num in nums:
-            #     cursor.execute("INSERT INTO symbols (name, image_number) VALUES (?, ?)", (name, num))
-        # conn.commit()
+
+            symbol_repository = SymbolsRepository(session)
+            symbol_rp_repository = SymbolRpRepository(session)
+
+            for num in nums:
+                symbol: Symbol = await symbol_repository.get_or_create(name=name)
+                symbol_rp: SymbolRp = await symbol_rp_repository.get_or_create(symbol_id=symbol.id, rp=num)
+
+    print("finish")
+
+
 
 
 if __name__ == "__main__":

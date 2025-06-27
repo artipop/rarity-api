@@ -21,3 +21,6 @@ deployd:
 
 deploy:
 	docker compose --env-file .env up --build
+
+symbol:
+	poetry run python src/symbols_parser.py
