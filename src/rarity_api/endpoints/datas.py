@@ -43,6 +43,20 @@ class CreateItem(BaseModel):
     photo_links: Optional[str]  # Можно хранить ссылки в формате JSON
     manufacturer: Optional[str]
 
+# надо подумать и синхронизировать
+class CreateItemData(BaseModel):
+    description: str | None = None  # nullable=True
+    image: str | None = None
+    year_from: int | None = None
+    year_to: int | None = None
+    country: str | None = None
+    manufacturer: str | None = None
+    region: str | None = None
+    city: str | None = None
+    # book only
+    rp: int | None = None
+
+
 class ItemData(BaseModel):
     id: int
     rp: int | None = None

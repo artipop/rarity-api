@@ -1,6 +1,6 @@
 from typing import Sequence
 from uuid import UUID
-from sqlalchemy import or_, select, update
+from sqlalchemy import or_, select, update, delete
 from sqlalchemy.orm import selectinload
 
 from rarity_api.common.auth.schemas.auth_credentials import AuthCredentialsCreate
@@ -168,6 +168,11 @@ class ManufacturerRepository(AbstractRepository):
         result = await self._session.execute(s)
         return result.scalars().all()
 
+    async def find_by_name(self, name: str) -> Manufacturer | None:
+        s = select(Manufacturer).where(Manufacturer.name == name)
+        result = await self._session.execute(s)
+        return result.scalars().first()
+
 
 class ItemRepository(AbstractRepository):
     model = Item
@@ -254,6 +259,9 @@ class ItemRepository(AbstractRepository):
         s = select(Item).where(Item.rp == book_id)
         result = await self._session.execute(s)
         return result.scalars().first()
+
+    async def delete_by_id(self, item_id: int):
+        await self._session.execute(delete(Item).where(Item.id == item_id))
 
 class SearchHistoryRepository(AbstractRepository):
     model = SearchHistory

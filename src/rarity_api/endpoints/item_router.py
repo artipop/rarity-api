@@ -32,6 +32,39 @@ async def create_item(create_data: CreateItem, session: AsyncSession = Depends(g
         )
     return await ItemRepository(session).create(**create_data.model_dump().pop("manufacturer"), manufacturer_id=manufacturer.id)
 
+
+@router.put("/{item_id}")
+async def update_item(
+        item_id: int,
+        create_data: CreateItem,
+        session: AsyncSession = Depends(get_session),
+        # TODO: uncomment later
+        # user: UserRead = Depends(authenticate)
+):
+    manufacturer_repository = ManufacturerRepository(session)
+    manufacturer: Manufacturer | None = await manufacturer_repository.find_by_name(create_data.manufacturer)
+    if not manufacturer:
+        raise HTTPException(
+            status_code=400,
+            detail="Мануфактура не найдена."
+        )
+    repository = ItemRepository(session)
+    updated = await repository.update()
+    return mapping(updated)
+
+
+@router.delete("/{item_id}")
+async def delete_item(
+        item_id: int,
+        session: AsyncSession = Depends(get_session),
+        # TODO: uncomment later
+        # user: UserRead = Depends(authenticate)
+):
+    repository = ItemRepository(session)
+    await repository.delete_by_id(item_id)
+    return Response(status_code=200)
+
+
 @router.get("/")
 async def get_items(
         page: int = 1,
