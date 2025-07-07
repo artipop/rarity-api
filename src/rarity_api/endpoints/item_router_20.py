@@ -23,67 +23,14 @@ router = APIRouter(
 
 
 @router.post("/create")
-async def create_item(create_data: CreateItem, session: AsyncSession = Depends(get_session)):
-    manufacturer = await ManufacturerRepository(session).find_by_name(create_data.manufacturer)
+async def create_item(create_data: CreateItem, session: AsyncSession = Depends(get_session), user: UserRead = Depends(authenticate)):
+    manufacturer: Manufacturer = await ManufacturerRepository(session).get_one_by_filter(create_data.manufacturer)
     if not manufacturer:
         raise HTTPException(
-            status_code=404,
-            detail="Мануфактура не найдена"
+            status_code=400,
+            detail="Мануфактурер не найден."
         )
-    data_dict = create_data.model_dump()
-    data_dict.pop("manufacturer")
-    data_dict.pop("region")
-    data_dict.pop("year_from")
-    data_dict.pop("year_to")
-    data_dict["production_years"] = f"{'' if create_data.year_from is None else create_data.year_from}-{'' if create_data.year_to is None else create_data.year_to}"
-    return await ItemRepository(session).create(**data_dict, manufacturer_id=manufacturer.id)
-
-
-@router.put("/{item_id}")
-async def update_item(
-        item_id: int,
-        data: CreateItem,
-        session: AsyncSession = Depends(get_session),
-        # TODO: uncomment later
-        # user: UserRead = Depends(authenticate)
-):
-    repository = ItemRepository(session)
-    item = await repository.find_by_id(item_id)
-    if not item:
-        raise HTTPException(
-            status_code=404,
-            detail="Клеймо не найдено"
-        )
-    if data.manufacturer:
-        manufacturer = await ManufacturerRepository(session).find_by_name(data.manufacturer)
-        if not manufacturer:
-            raise HTTPException(
-                status_code=404,
-                detail="Мануфактура не найдена"
-            )
-        item.manufacturer_id = manufacturer.id
-    item.rp = data.rp
-    item.description = data.description
-    item.production_years = data.production_years
-    item.photo_links = data.photo_links
-    # item.region = data.region
-    item.source = data.source
-    await session.commit()
-    await session.refresh(item)
-    return mapping(item)
-
-
-@router.delete("/{item_id}")
-async def delete_item(
-        item_id: int,
-        session: AsyncSession = Depends(get_session),
-        # TODO: uncomment later
-        # user: UserRead = Depends(authenticate)
-):
-    repository = ItemRepository(session)
-    await repository.delete_by_id(item_id)
-    return Response(status_code=200)
-
+    return await ItemRepository(session).create(**create_data.model_dump().pop("manufacturer"), manufacturer_id=manufacturer.id)
 
 @router.get("/")
 async def get_items(
@@ -213,40 +160,34 @@ async def list_favourites(
 @router.post("/find_by_image")
 async def find_by_image(
         data: FindByImageData,
-        page: int = 1,
-        offset: int = 10,
-        region_name: str = None,
-        country_name: str = None,
-        manufacturer_name: str = None,
-        symbol_name: str = None,
         session: AsyncSession = Depends(get_session)
 ):
     response = requests.post(
         # TODO: use env for llm URL
-        'http://host.docker.internal:8505/recognize',
+        'http://158.255.6.121:8080/recognize',
         json={'image': data.base64}
     )
+    print(response.status_code)
     if response.status_code != 200:
         return Response(status_code=response.status_code)
     data = response.json()
+    print(data['status'])
+#    print(response.status_code)
     if data['status'] != 'success':
         return Response(status_code=400)
     results = data['results'] if data['results'] else []
     sorted_by_similarity = sorted(results, key=lambda d: d['similarity'], reverse=True)
-    start = (page - 1) * offset
-    end = start + offset
-    paginated_results = sorted_by_similarity[start:end]
+    sorted_by_similarity = sorted(results, key=lambda d: d['similarity'], reverse=True)
+    print(sorted_by_similarity)
     repository = ItemRepository(session)
-    book_ids: list[int] = [
-        int(result['template'].split('/')[-1].split('_')[1].split('.')[0])
-        for result in paginated_results
-    ]
-    print(book_ids)
-    items = await repository.find_items(page, offset,
-                                        region=region_name, country=country_name, manufacturer=manufacturer_name,
-                                        symbol_name=symbol_name,
-                                        book_ids=book_ids)
-    return [mapping(item) for item in items]
+    a = []
+    for result in sorted_by_similarity:
+        i = int(result['template'].split('/')[-1].split('_')[1].split('.')[0])
+        item = await repository.find_by_book_id(i)
+        if item:
+            item_data = mapping(item)
+            a.append(item_data)
+    return a
 
 
 def mapping(item: Item) -> ItemData:
@@ -260,9 +201,7 @@ def mapping(item: Item) -> ItemData:
         description=item.description,
         year_from=int(years_array[0] if years_array[0] != "None" else 0),
         year_to=years_end,
-#        image=f"{settings.api_base_url}/images/mark_{item.rp}.png" if item.rp else None,
-        image=f"{item.rp}" if item.rp else None,
-        source=item.source
+        image=f"{settings.api_base_url}/images/mark_{item.rp}.png" if item.rp else None,
     )
 
 def full_mapping(item) -> ItemFullData:

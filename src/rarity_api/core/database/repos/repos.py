@@ -211,8 +211,8 @@ class ItemRepository(AbstractRepository):
         
         # Базовый запрос с джойном производителя
         stmt = select(Item).join(Item.manufacturer).limit(offset).offset((page - 1) * offset)
-        if book_ids:
-            stmt = stmt.where(Item.rp.in_(book_ids))
+#        if book_ids:
+#            stmt = stmt.where(Item.rp.in_(book_ids))
         # Фильтрация по географии (через города производителя)
         if country or region:
             stmt = stmt.join(Manufacturer.cities).join(City.region).join(Region.country)
@@ -226,13 +226,20 @@ class ItemRepository(AbstractRepository):
             stmt = stmt.where(Manufacturer.name == manufacturer)
         
         # Фильтрация по RP из символа
-        if symbol_name:
-            if rp_list:
-                stmt = stmt.where(Item.rp.in_(rp_list))
-            else:
-                # Если символ не найден, возвращаем пустой результат
-                stmt = stmt.where(1 == 0)  # Always false condition
-        
+#        if symbol_name:
+#            print("symbol_name")
+#            print(symbol_name)
+#            if rp_list:
+#                stmt = stmt.where(Item.rp.in_(rp_list))
+#            else:
+#                # Если символ не найден, возвращаем пустой результат
+#                stmt = stmt.where(1 == 0)  # Always false condition
+#        else:
+#          print("!!!")
+#          print(book_ids)
+        if book_ids:
+          print("Da!")
+          stmt = stmt.where(Item.rp.in_(book_ids))
         # Загрузка связанных данных
         stmt = stmt.options(
             selectinload(Item.manufacturer).selectinload(Manufacturer.cities)

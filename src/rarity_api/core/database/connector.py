@@ -10,7 +10,7 @@ from sqlalchemy.orm import sessionmaker
 from rarity_api.settings import settings
 
 async def get_engine() -> AsyncEngine:
-    return create_async_engine(settings.db_url)
+    return create_async_engine(settings.db_url, echo=True)
 
 def get_engine_sync() -> AsyncEngine:
     return create_async_engine(settings.db_url)
