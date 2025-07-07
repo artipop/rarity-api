@@ -174,6 +174,24 @@ class ManufacturerRepository(AbstractRepository):
         return result.scalars().first()
 
 
+class ManufacturerCityRepository(AbstractRepository):
+    model = models.ManufacturerCity
+
+    async def get_or_create(self, **kwargs):
+
+        query = (
+            select(self.model)
+            .filter_by(**kwargs)
+        )
+
+        result = await self._session.execute(query)
+        obj = result.scalars().first()
+
+        if obj is None:
+            obj = await self.create(**kwargs)
+            await self._session.commit()
+        return obj
+
 class ItemRepository(AbstractRepository):
     model = Item
 

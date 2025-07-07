@@ -7,7 +7,7 @@ from pydantic import BaseModel
 from sqlalchemy import insert
 from rarity_api.core.database.connector import get_session
 from rarity_api.core.database.models.models import Item
-from rarity_api.core.database.repos.repos import CityRepository, CountryRepository, ItemRepository, ManufacturerRepository, RegionRepository
+from rarity_api.core.database.repos.repos import CityRepository, CountryRepository, ItemRepository, ManufacturerCityRepository, ManufacturerRepository, RegionRepository
 
 
 class ReadItem(BaseModel):
@@ -49,14 +49,15 @@ async def main():
             manufacturer_repository = ManufacturerRepository(session)
 
             item_repository = ItemRepository(session)
-
+            manufacturer_city_repository = ManufacturerCityRepository(session)
             country = await country_repository.get_or_create(name=current_row.country)
             print(country)
 
             region = await region_repository.get_or_create(name=current_row.region, country_id=country.id)
             city = await city_repository.get_or_create(name=current_row.city, region_id=region.id if region else None)
             manufacturer = await manufacturer_repository.get_or_create(name=current_row.manufacturer_name)
-            
+            manufacturer_city = await manufacturer_city_repository.get_or_create(manufacturer_id=manufacturer.id, city_id=city.id)
+
             item = await item_repository.create(
                 rp=current_row.rp,
                 manufacturer_id=manufacturer.id,

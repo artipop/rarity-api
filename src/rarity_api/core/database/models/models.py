@@ -19,16 +19,20 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import declarative_base, relationship, Mapped, mapped_column
 
-from src.rarity_api.core.database.repos.abstract_repo import AbstractRepository
+from rarity_api.core.database.repos.abstract_repo import AbstractRepository
 
 Base = declarative_base()
 
-# Определяем таблицу для связи многие-ко-многим между Производителем и Городом
-manufacturer_city_association = Table(
-    'manufacturer_city', Base.metadata,
-    Column('manufacturer_id', Integer, ForeignKey('manufacturers.id'), primary_key=True),
-    Column('city_id', Integer, ForeignKey('cities.id'), primary_key=True)
-)
+
+
+class ManufacturerCity(Base):
+    __tablename__ = "manufacturer_cities"
+
+    manufacturer_id: Mapped[int] = mapped_column(ForeignKey("manufacturers.id"), primary_key=True)
+    city_id: Mapped[int] = mapped_column(ForeignKey("cities.id"), primary_key=True)
+    
+    manufacturer: Mapped["Manufacturer"] = relationship("Manufacturer", back_populates="cities")
+    city: Mapped["City"] = relationship("City", back_populates="manufacturers")
 
 class User(Base):
     __tablename__ = 'users'
@@ -73,7 +77,7 @@ class Manufacturer(Base):
     __tablename__ = 'manufacturers'
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
-    cities: Mapped["City"] = relationship("City", secondary=manufacturer_city_association, back_populates="manufacturers")
+    cities: Mapped[List["ManufacturerCity"]] = relationship("ManufacturerCity", back_populates="manufacturer")
     items: Mapped["Item"] = relationship("Item", back_populates="manufacturer")
 
 
@@ -117,7 +121,7 @@ class City(Base):
 
     region_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey('regions.id'), nullable=True)
     region: Mapped["Region"] = relationship("Region", back_populates="cities")
-    manufacturers: Mapped[List["Manufacturer"]] = relationship("Manufacturer", secondary=manufacturer_city_association, back_populates="cities")
+    manufacturers: Mapped[List["ManufacturerCity"]] = relationship("ManufacturerCity",  back_populates="city")
 
 
 
