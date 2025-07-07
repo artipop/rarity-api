@@ -123,7 +123,7 @@ async def get_items(
         # to_date: str = None,
         session: AsyncSession = Depends(get_session)
 ):
-    # Save search history
+    # Save search history asdfdas
     # TODO: если идентичный поиск уже был, то обновить дату поиска просто (поднять вверх по сути)
     search_history = SearchHistory(
         region_name=region_name if region_name else "",
