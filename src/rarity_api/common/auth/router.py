@@ -1,8 +1,10 @@
 from fastapi import APIRouter, Depends, Response, Request
+from sqlalchemy import or_, select
 from rarity_api.common.auth.dependencies import preprocess_auth, authenticate
 from rarity_api.common.auth.schemas.user import UserRead
 from rarity_api.common.auth.utils import AuthType
 from rarity_api.common.logger import logger
+from rarity_api.core.database.models.models import User
 from rarity_api.database import get_session
 from rarity_api.google_auth.dependencies import logout as logout_google
 from rarity_api.native_auth.dependencies import logout as logout_native
@@ -11,6 +13,7 @@ router = APIRouter(
     prefix="/common-auth",
     tags=["authorization"]
 )
+
 
 
 @router.post("/logout/")
@@ -45,3 +48,4 @@ async def auth_user_check_self_info(
 ):
     print(type(user))
     return user
+
