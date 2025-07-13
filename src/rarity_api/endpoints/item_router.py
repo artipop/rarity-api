@@ -18,6 +18,8 @@ from rarity_api.core.database.models.models import City, Country, Item, Manufact
 from rarity_api.core.database.repos.repos import ItemRepository, ManufacturerRepository, SearchHistoryRepository
 from rarity_api.settings import settings
 
+from src.rarity_api.core.database.repos.repos import UserFavouritesRepository
+
 router = APIRouter(
     prefix="/items",
     tags=["items"]
@@ -226,22 +228,40 @@ async def get_item(
 @router.put("/{item_id}/markfav")
 async def mark_favourite(
         item_id: int,
-        session: AsyncSession = Depends(get_session)
+        session: AsyncSession = Depends(get_session),
+        user: UserRead = Depends(authenticate)
 ) -> ItemData:
-    repository = ItemRepository(session)
-    item = await repository.find_by_id(item_id)
+    user_id: int = user.id  # TODO: сюда занести ид юзера из депендса
+    repository = UserFavouritesRepository(session)
+    item_repo = ItemRepository(session)
+    item = await item_repo.find_by_id(item_id)
+    fav_row = await repository.get_user_fav_by_filter(user_id=user_id, item_id=item_id)
     if not item:
-        return Response(status_code=404)
+        raise HTTPException(
+            status_code=400,
+            detail="Item not found"
+        )
+
+    if fav_row:
+        await repository.mark_unfav(item_id=item_id, user_id=user_id)
+
+    else:
+        await repository.create(user_id=user_id, item_id=item_id)
+
     return mapping(item)
 
 
 @router.get("/favourites")
 async def list_favourites(
-        session: AsyncSession = Depends(get_session)
+        session: AsyncSession = Depends(get_session),
+        user: UserRead = Depends(authenticate)
 ) -> List[ItemData]:
+    user_id: int = user.id
+    repository = UserFavouritesRepository(session)
+    favs = await repository.get_user_fav_by_filter(user_id=user_id)
     repository = ItemRepository(session)
-    # ...
-    # return [mapping(item) for item in items]
+    items = [await repository.find_by_id(fav.item_id) for fav in favs]
+    return [mapping(item) for item in items]
 
 
 cache = cachetools.TTLCache(maxsize=1000, ttl=300)

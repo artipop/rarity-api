@@ -21,7 +21,7 @@ router = APIRouter(
 async def get_user_subscription(request: Request, user: UserRead = Depends(authenticate)):
     return user
 
-@router.get("/search")
+@router.get("/")
 async def search_users(page: int = 1, offset: int = 20, name: Optional[str] = None, email: Optional[str] = None, session: AsyncSession = Depends(get_session)): # если надо будет, админ авторизацию прикрутить можно
     
     filters = []
@@ -41,7 +41,7 @@ async def search_users(page: int = 1, offset: int = 20, name: Optional[str] = No
     return result.scalars().all()
 
 
-@router.delete("/delete/{user_id}")
+@router.delete("/{user_id}")
 async def delete_user(user_id: UUID, session: AsyncSession = Depends(get_session)):
     return await UserRepository(session).delete_by_id(user_id)
 
