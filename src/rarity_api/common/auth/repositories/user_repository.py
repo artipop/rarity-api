@@ -1,10 +1,10 @@
 from sqlalchemy import select
 
-from rarity_api.common.auth.models.auth_credentials import AuthCredentials
-from rarity_api.common.auth.models.user import User
+from rarity_api.common.auth.providers.schemas.oidc_user import UserInfoFromIDProvider
 from rarity_api.common.auth.schemas.user import UserCreate
-from rarity_api.database import AbstractRepository
-from rarity_api.google_auth.schemas.oidc_user import UserInfoFromIDProvider
+from rarity_api.core.database.models.models import AuthCredentials
+from rarity_api.core.database.models.models import User
+from rarity_api.core.database.repos.abstract_repo import AbstractRepository
 
 
 class UserRepository(AbstractRepository):

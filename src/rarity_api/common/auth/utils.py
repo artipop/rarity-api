@@ -9,6 +9,7 @@ from rarity_api.settings import settings
 class AuthType(Enum):
     NATIVE = settings.api_base_url
     GOOGLE = "https://accounts.google.com"
+    YANDEX = "https://passport.yandex.ru"
 
 
 def determine_auth_scheme(token_payload) -> AuthType:

@@ -40,7 +40,7 @@ async def get_token_info(token: str):
     return token_info_data
 
 
-async def exchage_code_to_tokens(code: str) -> Dict[str, str]:
+async def exchange_code_to_tokens(code: str) -> Dict[str, str]:
     """
     exchanges auth code for tokens
     raises HTTPException

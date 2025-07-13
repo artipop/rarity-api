@@ -2,8 +2,10 @@ from contextlib import asynccontextmanager
 import sys
 from pathlib import Path
 
+# TODO: ???
 # Добавляем src/ в PYTHONPATH
 sys.path.append(str(Path(__file__).parent.parent))
+
 from alembic import command
 from alembic.config import Config
 from fastapi import FastAPI
@@ -20,8 +22,8 @@ from rarity_api.endpoints.item_router import router as item_router
 from rarity_api.endpoints.manufacturer_router import router as manufacturer_router
 from rarity_api.endpoints.region_router import router as region_router
 from rarity_api.endpoints.search_history_router import router as search_history_router
-from rarity_api.common.auth.google_auth.router import router as google_auth_router
-from rarity_api.common.auth.google_auth.utils.id_provider_certs import IdentityProviderCerts
+from rarity_api.common.auth.providers.router import router as google_auth_router
+from rarity_api.common.auth.providers.utils.id_provider_certs import IdentityProviderCerts
 from rarity_api.common.auth.native_auth.router import router as plain_auth_router
 from rarity_api.endpoints.user_router import router as user_router
 from rarity_api.endpoints.payment_router import router as payment_router
@@ -38,11 +40,12 @@ app = FastAPI(
 )
 
 app.add_middleware(
-    CORSMiddleware, 
-    allow_origins=["http://localhost", "http://localhost:8081"], 
-    allow_credentials=True, 
-    allow_methods=["*"], 
-    allow_headers=["*"])
+    CORSMiddleware,
+    allow_origins=["http://localhost", "http://localhost:8081"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
 
 app.include_router(google_auth_router)
 app.include_router(plain_auth_router)
@@ -64,6 +67,7 @@ app.mount("/images", StaticFiles(directory="src/rarity_api/images"), name="image
 admin = Admin(app, get_engine_sync())
 admin.add_view(UserAdmin)
 
+
 @asynccontextmanager
 async def lifespan():
     http_client = HttpClient()
@@ -74,6 +78,7 @@ async def lifespan():
     await http_client.close_session()
 
 
+# TODO: not used
 def run_migrations():
     alembic_cfg = Config("alembic.ini")
     command.upgrade(alembic_cfg, "head")

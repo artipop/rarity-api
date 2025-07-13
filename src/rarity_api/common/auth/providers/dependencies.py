@@ -1,17 +1,22 @@
 from datetime import datetime, timezone
 from typing import Dict
 
+import aiohttp
 from fastapi import Response, Depends, HTTPException
 from jose import jwt, JWTError
+from pydantic import EmailStr
+
 from rarity_api.common.auth.exceptions import AuthException
-from rarity_api.common.auth.schemas.token import TokenType
+from rarity_api.common.auth.repositories.user_repository import UserRepository
+from rarity_api.common.auth.schemas.token import TokenType, TokenFromIDProvider
+from rarity_api.common.auth.schemas.user import UserRead
 from rarity_api.common.auth.services.auth_service import AuthService
 from rarity_api.common.logger import logger
 from rarity_api.core.database.connector import get_session
-from rarity_api.common.auth.google_auth.schemas.oidc_user import UserInfoFromIDProvider
-from rarity_api.common.auth.google_auth.utils.id_provider_certs import IdentityProviderCerts
-from rarity_api.common.auth.google_auth.utils.requests import get_new_tokens, revoke_token
-from rarity_api.common.auth.google_auth.utils.state_storage import StateStorage
+from rarity_api.common.auth.providers.schemas.oidc_user import UserInfoFromIDProvider
+from rarity_api.common.auth.providers.utils.id_provider_certs import IdentityProviderCerts
+from rarity_api.common.auth.providers.utils.requests import get_new_tokens, revoke_token
+from rarity_api.common.auth.providers.utils.state_storage import StateStorage
 from rarity_api.settings import settings
 
 state_storage = StateStorage()  # TODO(weldonfe): refactor somehow later, maybe to Redis storage?
@@ -22,46 +27,65 @@ async def authenticate(
         response: Response,
         session=Depends(get_session)
 ):
-    email_from_unverified_payload = jwt.get_unverified_claims(id_token).get("email", "")
+    unverified_email_claim = jwt.get_unverified_claims(id_token).get("email", "")
+    auth_service = AuthService(session)
     if is_id_token_expired(id_token):
         access_token, id_token = await rotate_tokens(
-            user_email=email_from_unverified_payload,
+            user_email=unverified_email_claim,
             session=session
         )
-
         response.set_cookie(
             key="session_id",
             value=f"Bearer {id_token}",
             httponly=True,  # to prevent JavaScript access
             # secure=True,
         )
-
     else:
-        access_token, refresh_token = await AuthService(session).get_oidc_tokens_by_mail(
-            email=email_from_unverified_payload
-        )
-
+        access_token, refresh_token = await auth_service.get_oidc_tokens_by_mail(email=unverified_email_claim)
     # try:
     user_from_token = await validate_id_token(id_token, access_token)
-    user_data = await AuthService(session).get_user_by_mail(user_from_token.email)
+    user_data = await auth_service.get_user_by_email(user_from_token.email.__str__())
     return user_data
-
     # except Exception as e: #specify exception or token exp validation here
     #     raise AuthException("Smth wrng with token!")
+
+
+async def authenticate_yandex(
+        id_token: str,
+        sess=Depends(get_session)
+) -> UserRead:
+    url = 'https://login.yandex.ru/info?format=json'
+    headers = {
+        'Authorization': 'OAuth ' + id_token
+    }
+    auth_service = AuthService(sess)
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, headers=headers) as response:
+            data = await response.json()
+            # email = data.get("default_email")
+            email = "artem@yandex.ru"
+            existing_user = await auth_service.get_user_by_email(email)
+            if existing_user:
+                return existing_user
+            else:
+                u = UserInfoFromIDProvider(email=EmailStr(email))
+                access_token_data = TokenFromIDProvider(token=id_token),
+                # refresh_token_data = TokenFromIDProvider(token=refresh_token)
+                await auth_service.get_or_create_oidc_user(user_data=u, access_token_data=access_token_data)
+                return await auth_service.get_user_by_email(email)
 
 
 async def rotate_tokens(
         user_email: str,
         session
 ):
-    old_access_token, refresh_token = await AuthService(session).get_oidc_tokens_by_mail(
+    auth_service = AuthService(session)
+    old_access_token, refresh_token = await auth_service.get_oidc_tokens_by_mail(
         email=user_email
     )
-
     renewed_access_token, renewed_id_token = await get_new_tokens(refresh_token)
-
-    user = await AuthService(session).get_user_by_mail(email=user_email)
-    await AuthService(session).update_token(
+    user = await auth_service.get_user_by_email(email=user_email)
+    await auth_service.update_token(
         user_id=user.id,
         token=renewed_access_token,
         token_type=TokenType.ACCESS.value
@@ -146,5 +170,5 @@ async def logout(
         for token_data in deleted_tokens:
             try:
                 await revoke_token(token_data.token)
-            except Exception as e:  # token might be expired or allready revoked
+            except Exception as e:  # token might be expired or already revoked
                 pass

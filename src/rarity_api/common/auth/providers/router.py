@@ -26,8 +26,8 @@ from fastapi.responses import RedirectResponse
 from rarity_api.common.auth.schemas.token import TokenFromIDProvider
 from rarity_api.common.auth.services.auth_service import AuthService
 from rarity_api.core.database.connector import get_session
-from rarity_api.common.auth.google_auth.dependencies import state_storage, validate_id_token
-from rarity_api.common.auth.google_auth.utils.requests import exchage_code_to_tokens
+from rarity_api.common.auth.providers.dependencies import state_storage, validate_id_token
+from rarity_api.common.auth.providers.utils.requests import exchange_code_to_tokens
 from rarity_api.settings import settings
 
 router = APIRouter(
@@ -64,7 +64,6 @@ async def auth_callback(
         state: str = Depends(state_storage.validate),
         session=Depends(get_session)
 ):
-    # try:
     if error:
         raise HTTPException(
             status_code=404,
@@ -76,7 +75,7 @@ async def auth_callback(
             detail="No code transmitted from id provider"
         )
 
-    access_token, refresh_token, id_token = await exchage_code_to_tokens(code)
+    access_token, refresh_token, id_token = await exchange_code_to_tokens(code)
     user_data_from_id_token = await validate_id_token(id_token, access_token)
 
     await AuthService(session).get_or_create_oidc_user(
@@ -84,18 +83,11 @@ async def auth_callback(
         access_token_data=TokenFromIDProvider(token=access_token),
         refresh_token_data=TokenFromIDProvider(token=refresh_token)
     )
-
-    response = RedirectResponse(
-        url=settings.post_login_redirect_uri)  # TODO(weldonfe): change redirection route to actual frontend
+    response = RedirectResponse(url=settings.post_login_redirect_uri)
     response.set_cookie(
         key="session_id",
         value=f"Bearer {id_token}",
         httponly=True,  # to prevent JavaScript access
         # secure=True,
     )
-
     return response
-
-    # except HTTPException as e:
-    #     logger.warning(e)
-    #     raise AuthException(detail="Not authenticated")

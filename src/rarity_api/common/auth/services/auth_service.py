@@ -1,23 +1,20 @@
 import datetime
 
 from rarity_api.common.auth.exceptions import AuthException
-
-from rarity_api.core.database.repos.repos import AuthCredentialsRepository
-from rarity_api.core.database.repos.repos import UserRepository
-from rarity_api.core.database.repos.repos import TokenRepository
-
-
-from rarity_api.common.auth.schemas.auth_credentials import AuthCredentialsCreate
-from rarity_api.common.auth.schemas.token import TokenFromIDProvider, TokenCreate, TokenRead, TokenType
-from rarity_api.common.auth.schemas.user import UserCreate, UserRead, UserInDB
-from rarity_api.common.auth.utils import AuthType
-from rarity_api.common.auth.google_auth.schemas.oidc_user import UserInfoFromIDProvider
 from rarity_api.common.auth.native_auth.schemas.user import (
     UserCreatePlainPassword,
     UserCreateHashedPassword,
 )
+from rarity_api.common.auth.providers.schemas.oidc_user import UserInfoFromIDProvider
+from rarity_api.common.auth.schemas.auth_credentials import AuthCredentialsCreate
+from rarity_api.common.auth.schemas.token import TokenFromIDProvider, TokenCreate, TokenRead, TokenType
+from rarity_api.common.auth.schemas.user import UserCreate, UserRead, UserInDB
+from rarity_api.common.auth.utils import AuthType
 from rarity_api.core.database.models.models import Subscription
+from rarity_api.core.database.repos.repos import AuthCredentialsRepository
 from rarity_api.core.database.repos.repos import SubscriptionRepository
+from rarity_api.core.database.repos.repos import TokenRepository
+from rarity_api.core.database.repos.repos import UserRepository
 from rarity_api.utils.smtp.verify_sender import MailSender
 
 
@@ -25,13 +22,12 @@ class AuthService:
     def __init__(self, session):
         self.session = session
 
-    async def get_user_by_mail(self, email: str):
-        "a method for getting user data from the database using his gmail"
-        user_db_ans = await UserRepository(self.session).get_existing_user_by_mail(
-            email=email
-        )
+    async def get_user_by_email(self, email: str) -> UserRead | None:
+        repository = UserRepository(self.session)
+        user_db_ans = await repository.get_existing_user_by_mail(email=email)
         if user_db_ans:
             return UserRead.model_validate(user_db_ans, from_attributes=True)
+        return None
 
     async def get_user_by_id(self, user_id: str):
         user_db_answer = await UserRepository(self.session).get_by_id(user_id)
@@ -43,9 +39,8 @@ class AuthService:
             access_token_data: TokenFromIDProvider,
             refresh_token_data: TokenFromIDProvider
     ):
-        user_db_answer = await UserRepository(self.session).get_or_create_oidc_user(
-            user_data=user_data
-        )
+        user_repository = UserRepository(self.session)
+        user_db_answer = await user_repository.get_or_create_oidc_user(user_data=user_data)
         repository = SubscriptionRepository(self.session)
         s = await repository.find_by_user(user_db_answer.id)
         if not s:
@@ -78,7 +73,7 @@ class AuthService:
         await self.session.commit()
 
     async def get_oidc_tokens_by_mail(self, email: str):
-        user = await self.get_user_by_mail(email=email)
+        user = await self.get_user_by_email(email=email)
 
         access_token_db_ans = await TokenRepository(self.session).get_one_by_filter(
             {
@@ -116,7 +111,7 @@ class AuthService:
         return deleted_tokens
 
     async def logout_oidc_user(self, user_data: UserInfoFromIDProvider):
-        user_db_answer = await self.get_user_by_mail(email=user_data.email)
+        user_db_answer = await self.get_user_by_email(email=user_data.email)
         if not user_db_answer:
             return
 
@@ -131,7 +126,7 @@ class AuthService:
             self,
             user_data: UserCreatePlainPassword
     ):
-        existing_user = await self.get_user_by_mail(email=user_data.email)
+        existing_user = await self.get_user_by_email(email=user_data.email)
         if existing_user:
             raise AuthException(detail="User with given email already exists")
 
@@ -141,7 +136,8 @@ class AuthService:
             token: str,
             expire: datetime
     ):
-        user_db_answer = await UserRepository(self.session).create(email=user_data.email, verify_token=token, token_expires=expire)
+        user_db_answer = await UserRepository(self.session).create(email=user_data.email, verify_token=token,
+                                                                   token_expires=expire)
         # create trial subscription by default
         # sub = self.create_trial_subscription(user_db_answer.id)
         # saved = await SubscriptionRepository(self.session).create(sub)

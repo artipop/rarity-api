@@ -6,7 +6,7 @@ from sqlalchemy.orm import selectinload
 from rarity_api.common.auth.schemas.auth_credentials import AuthCredentialsCreate
 from rarity_api.common.auth.schemas.token import TokenCreate
 from rarity_api.common.auth.schemas.user import UserCreate
-from rarity_api.common.auth.google_auth.schemas.oidc_user import UserInfoFromIDProvider
+from rarity_api.common.auth.providers.schemas.oidc_user import UserInfoFromIDProvider
 from rarity_api.core.database.models import models
 from rarity_api.core.database.models.models import Country, City, Manufacturer, ManufacturerCity, Region, Item, SearchHistory, Symbol, SymbolRp, SymbolsLocale
 from rarity_api.core.database.repos.abstract_repo import AbstractRepository
@@ -46,6 +46,7 @@ class UserRepository(AbstractRepository):
         existing_user = await self.get_by_filter({"email": email})
         if existing_user:
             return existing_user[0]
+        return None
 
     async def verify_user(self, user_id: int):
         query = (

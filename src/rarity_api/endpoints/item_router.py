@@ -1,9 +1,10 @@
 import hashlib
-from typing import List
+from typing import List, Annotated
 
 import cachetools
 import requests
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import Response
@@ -222,16 +223,19 @@ async def get_item(
     if not item:
         return Response(status_code=404)
     return full_mapping(item)
-#    return full_mapping(item)
 
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 @router.put("/{item_id}/markfav")
 async def mark_favourite(
         item_id: int,
+        token: Annotated[str, Depends(oauth2_scheme)],
         session: AsyncSession = Depends(get_session),
-        user: UserRead = Depends(authenticate)
+        # user: UserRead = Depends(authenticate)
 ) -> ItemData:
-    user_id: int = user.id  # TODO: сюда занести ид юзера из депендса
+    print(token)
+    user_id: int = 1
     repository = UserFavouritesRepository(session)
     item_repo = ItemRepository(session)
     item = await item_repo.find_by_id(item_id)
@@ -254,6 +258,7 @@ async def mark_favourite(
 @router.get("/favourites")
 async def list_favourites(
         session: AsyncSession = Depends(get_session),
+
         user: UserRead = Depends(authenticate)
 ) -> List[ItemData]:
     user_id: int = user.id
