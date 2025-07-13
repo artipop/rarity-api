@@ -22,7 +22,7 @@ async def get_user_subscription(request: Request, user: UserRead = Depends(authe
     return user
 
 @router.get("/search")
-async def search_users(page: int, offset: int = 20, name: Optional[str] = None, email: Optional[str] = None, session: AsyncSession = Depends(get_session)): # если надо будет, админ авторизацию прикрутить можно
+async def search_users(page: int = 1, offset: int = 20, name: Optional[str] = None, email: Optional[str] = None, session: AsyncSession = Depends(get_session)): # если надо будет, админ авторизацию прикрутить можно
     
     filters = []
 
