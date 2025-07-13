@@ -63,6 +63,12 @@ class ItemData(BaseModel):
     # manufacturer_id: int
     # manufacturer: ManufacturerData
 
+class UpdateUser(BaseModel):
+    email: Optional[str] = None
+    first_name: Optional[str] = None
+    second_name: Optional[str] = None
+    last_name: Optional[str] = None
+    is_verified: Optional[bool] = None
 
 class ItemFullData(ItemData):
     country: str

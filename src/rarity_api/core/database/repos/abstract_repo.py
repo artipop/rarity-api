@@ -44,11 +44,11 @@ class AbstractRepository(ABC):
     #     await self._session.commit()
     #     return result.scalars().first()
     #
-    # async def delete_by_id(self, _id):
-    #     query = delete(self.model).where(self.model.id == _id)
-    #     result = await self._session.execute(query)
-    #     await self._session.commit()
-    #     return result.rowcount
+    async def delete_by_id(self, _id):
+        query = delete(self.model).where(self.model.id == _id)
+        result = await self._session.execute(query)
+        await self._session.commit()
+        return result.rowcount
 
     async def get_by_filter(self, kwargs):
         query = select(self.model).filter_by(**kwargs)
@@ -73,6 +73,19 @@ class AbstractRepository(ABC):
             obj = await self.create(**kwargs)
             await self._session.commit()
         return obj
+
+    async def update_by_id(self, objId: int, **kwargs):
+        query = (
+            update(self.model)
+            .where(self.model.id == objId)
+            .values(**kwargs)
+            .returning(self.model)
+
+        )
+
+        result = await self._session.execute(query)
+        await self._session.commit()
+        return result.scalars().first()
 
     # async def delete_by_value(self, field_name, value):
     #     field = getattr(self.model, field_name)

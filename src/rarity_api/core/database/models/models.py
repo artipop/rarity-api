@@ -53,10 +53,11 @@ class User(Base):
 
 
 
+
 class AuthCredentials(Base):
     __tablename__ = 'auth_credentials'
     id: Mapped[UUID] = mapped_column(UUID, primary_key=True, default=uuid.uuid4)
-    user_id: Mapped[UUID] = mapped_column(UUID, ForeignKey('users.id'), nullable=False)
+    user_id: Mapped[UUID] = mapped_column(UUID, ForeignKey('users.id', ondelete="CASCADE"), nullable=False)
     auth_type: Mapped[str] = mapped_column(nullable=False)
     password_hash: Mapped[bytes] = mapped_column(LargeBinary, nullable=True)
 
