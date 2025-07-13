@@ -230,12 +230,12 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 @router.put("/{item_id}/markfav")
 async def mark_favourite(
         item_id: int,
-        token: Annotated[str, Depends(oauth2_scheme)],
+        # token: Annotated[str, Depends(oauth2_scheme)],
         session: AsyncSession = Depends(get_session),
-        # user: UserRead = Depends(authenticate)
+        user: UserRead = Depends(authenticate)
 ) -> ItemData:
-    print(token)
-    user_id: int = 1
+    # print(token)
+    user_id = user.id
     repository = UserFavouritesRepository(session)
     item_repo = ItemRepository(session)
     item = await item_repo.find_by_id(item_id)

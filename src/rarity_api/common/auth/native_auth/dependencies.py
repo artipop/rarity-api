@@ -1,6 +1,8 @@
 from typing import Dict
 
 from fastapi import Depends, Response
+from fastapi.security import OAuth2PasswordBearer
+
 from rarity_api.common.auth.exceptions import AuthException
 from rarity_api.common.auth.schemas.user import UserRead, UserInDB
 from rarity_api.common.auth.services.auth_service import AuthService
@@ -17,8 +19,10 @@ from rarity_api.common.auth.native_auth.utils.jwt_helpers import (
 )
 from rarity_api.common.auth.native_auth.utils.password_helpers import validate_password
 
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
-async def authenticate(id_token: str, response: Response, session=Depends(get_session)):
+
+async def authenticate(response: Response, id_token: str = Depends(oauth2_scheme), session=Depends(get_session)) -> UserRead:
     try:
         payload = decode_jwt(id_token)
 
