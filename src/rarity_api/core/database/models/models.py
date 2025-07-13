@@ -43,7 +43,7 @@ class User(Base):
     first_name: Mapped[String] = mapped_column(String(255), nullable=True)
     second_name: Mapped[String] = mapped_column(String(255), nullable=True)
     last_name: Mapped[String] = mapped_column(String(255), nullable=True)
-    is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_verified: Mapped[bool] = mapped_column(Boolean, default=True)  # TODO: should be false!!!
     verify_token: Mapped[Optional[str]]
     token_expires: Mapped[Optional[DateTime]] = mapped_column(DateTime(timezone=True))
     subscription = relationship("Subscription", back_populates="user")
