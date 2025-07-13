@@ -1,3 +1,5 @@
+from typing import Optional
+
 import aiohttp
 from fastapi import Request, Response, Depends
 from fastapi.security import OAuth2PasswordBearer
@@ -15,9 +17,10 @@ from rarity_api.common.auth.providers.dependencies import authenticate as authen
 from rarity_api.common.auth.native_auth.dependencies import authenticate as authenticate_native
 
 
-def preprocess_auth(request: Request):
+def preprocess_auth(request: Request, id_token: Optional[str] = None):
     # TODO: get auth from cookie OR Bearer!
-    id_token = get_auth_from_cookie(request=request, cookie_name="session_id")
+    if not id_token:
+        id_token = get_auth_from_cookie(request=request, cookie_name="session_id")
     id_token_payload = decode_jwt_without_verification(id_token)
     auth_scheme = determine_auth_scheme(id_token_payload)
     return id_token, id_token_payload, auth_scheme
@@ -33,7 +36,7 @@ async def authenticate(
         session=Depends(get_session),
         # TODO(weldonfe): determine type hint here, maybe posgresql.async_session or smth?...
 ):
-    id_token, id_token_payload, auth_scheme = preprocess_auth(request=request)
+    id_token, id_token_payload, auth_scheme = preprocess_auth(request=request, id_token=id_token)
     logger.critical(auth_scheme)
     try:
         if auth_scheme == AuthType.GOOGLE:
