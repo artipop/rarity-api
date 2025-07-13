@@ -9,7 +9,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import Response
 from sqlalchemy.orm import selectinload
-from rarity_api.common.auth.native_auth.dependencies import authenticate
+from rarity_api.common.auth.dependencies import authenticate
 from rarity_api.common.auth.schemas.user import UserRead
 from rarity_api.endpoints.datas import CreateItem, ItemData, SearchHistoryCreate, ItemFullData, FindByImageData, SearchResponse
 from rarity_api.endpoints.datas import ItemData, SearchHistoryCreate, ItemFullData, FindByImageData, SearchResponse

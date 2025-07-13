@@ -1,5 +1,7 @@
 import aiohttp
 from fastapi import Request, Response, Depends
+from fastapi.security import OAuth2PasswordBearer
+
 from rarity_api.common.auth.exceptions import AuthException
 from rarity_api.common.auth.utils import (
     AuthType,
@@ -9,7 +11,7 @@ from rarity_api.common.auth.utils import (
 )
 from rarity_api.common.logger import logger
 from rarity_api.core.database.connector import get_session
-from rarity_api.common.auth.providers.dependencies import authenticate as authenticate_google
+from rarity_api.common.auth.providers.dependencies import authenticate as authenticate_google, authenticate_yandex
 from rarity_api.common.auth.native_auth.dependencies import authenticate as authenticate_native
 
 
@@ -21,9 +23,13 @@ def preprocess_auth(request: Request):
     return id_token, id_token_payload, auth_scheme
 
 
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+
 async def authenticate(
         request: Request,
         response: Response,
+        id_token: str = Depends(oauth2_scheme),
         session=Depends(get_session),
         # TODO(weldonfe): determine type hint here, maybe posgresql.async_session or smth?...
 ):
@@ -36,7 +42,9 @@ async def authenticate(
             user.auth_type = 'google'
             return user
         if auth_scheme == AuthType.YANDEX:
-
+            user = await authenticate_yandex(id_token)
+            user.auth_type = 'yandex'
+            return user
         elif auth_scheme == AuthType.NATIVE:
             logger.critical("TRYING AUTH WITH NATIVE")
             user = await authenticate_native(id_token, response, session)
