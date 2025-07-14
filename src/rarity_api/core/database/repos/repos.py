@@ -8,7 +8,8 @@ from rarity_api.common.auth.schemas.token import TokenCreate
 from rarity_api.common.auth.schemas.user import UserCreate
 from rarity_api.common.auth.providers.schemas.oidc_user import UserInfoFromIDProvider
 from rarity_api.core.database.models import models
-from rarity_api.core.database.models.models import Country, City, Manufacturer, ManufacturerCity, Region, Item, SearchHistory, Symbol, SymbolRp, SymbolsLocale
+from rarity_api.core.database.models.models import Country, City, Manufacturer, ManufacturerCity, Region, Item, \
+    SearchHistory, Symbol, SymbolRp, SymbolsLocale, AuthCredentials
 from rarity_api.core.database.repos.abstract_repo import AbstractRepository
 
 
@@ -78,6 +79,12 @@ class UserRepository(AbstractRepository):
 
         result = await self._session.execute(query)
         return result.first()
+
+    async def delete_user(self, user_id):
+        query = delete(AuthCredentials).where(AuthCredentials.user_id == user_id)
+        result = await self._session.execute(query)
+        await self.delete_by_id(user_id)
+
 
 class CountryRepository(AbstractRepository):
     model = Country

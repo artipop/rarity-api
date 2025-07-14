@@ -43,7 +43,8 @@ async def search_users(page: int = 1, offset: int = 20, name: Optional[str] = No
 
 @router.delete("/{user_id}")
 async def delete_user(user_id: UUID, session: AsyncSession = Depends(get_session)):
-    return await UserRepository(session).delete_by_id(user_id)
+    repository = UserRepository(session)
+    return await repository.delete_user(user_id)
 
 @router.put("/{user_id}")
 async def update_user(user_id: UUID, update_data: UpdateUser, session: AsyncSession = Depends(get_session)):

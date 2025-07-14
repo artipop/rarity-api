@@ -18,7 +18,7 @@ from rarity_api.common.auth.native_auth.dependencies import authenticate as auth
 
 
 def preprocess_auth(request: Request, id_token: Optional[str] = None):
-    # TODO: get auth from cookie OR Bearer!
+    # get auth from cookie OR Bearer!
     if not id_token:
         id_token = get_auth_from_cookie(request=request, cookie_name="session_id")
     id_token_payload = decode_jwt_without_verification(id_token)
