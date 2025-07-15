@@ -45,6 +45,20 @@ async def create_item(create_data: CreateItem, session: AsyncSession = Depends(g
     return await ItemRepository(session).create(**data_dict, manufacturer_id=manufacturer.id)
 
 
+@router.get("/favourites")
+async def list_favourites(
+        session: AsyncSession = Depends(get_session),
+        user: UserRead = Depends(authenticate)
+) -> List[ItemData]:
+    print(type(user))
+    user_id = user.id
+    repository = UserFavouritesRepository(session)
+    favs = await repository.get_user_fav_by_filter(user_id=user_id)
+    repository = ItemRepository(session)
+    items = [await repository.find_by_id(fav.item_id) for fav in favs]
+    return [mapping(item) for item in items]
+
+
 @router.put("/{item_id}")
 async def update_item(
         item_id: int,
@@ -253,20 +267,6 @@ async def mark_favourite(
         await repository.create(user_id=user_id, item_id=item_id)
 
     return mapping(item)
-
-
-@router.get("/favourites")
-async def list_favourites(
-        session: AsyncSession = Depends(get_session),
-        user: UserRead = Depends(authenticate)
-) -> List[ItemData]:
-    print(type(user))
-    user_id = user.id
-    repository = UserFavouritesRepository(session)
-    favs = await repository.get_user_fav_by_filter(user_id=user_id)
-    repository = ItemRepository(session)
-    items = [await repository.find_by_id(fav.item_id) for fav in favs]
-    return [mapping(item) for item in items]
 
 
 cache = cachetools.TTLCache(maxsize=1000, ttl=300)
