@@ -17,10 +17,13 @@ from rarity_api.common.auth.providers.dependencies import authenticate as authen
 from rarity_api.common.auth.native_auth.dependencies import authenticate as authenticate_native
 
 
+# `id_token_payload` is not used in login, only logout
 def preprocess_auth(request: Request, id_token: Optional[str] = None):
     # get auth from cookie OR Bearer!
     if not id_token:
         id_token = get_auth_from_cookie(request=request, cookie_name="session_id")
+    if id_token.startswith('y0'):
+        return id_token, None, AuthType.YANDEX
     id_token_payload = decode_jwt_without_verification(id_token)
     auth_scheme = determine_auth_scheme(id_token_payload)
     return id_token, id_token_payload, auth_scheme
