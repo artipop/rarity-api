@@ -73,9 +73,11 @@ async def authenticate_yandex(
             else:
                 print("!!!")
                 u = UserInfoFromIDProvider(email=email)
-                access_token_data = TokenFromIDProvider(token=id_token),
-                # refresh_token_data = TokenFromIDProvider(token=refresh_token)
-                await auth_service.get_or_create_oidc_user(user_data=u, access_token_data=access_token_data)
+                access_token_data = TokenFromIDProvider(token=id_token)
+                refresh_token_data = TokenFromIDProvider(token="")
+                await auth_service.get_or_create_oidc_user(user_data=u,
+                                                           access_token_data=access_token_data,
+                                                           refresh_token_data=refresh_token_data)
                 email_ = await auth_service.get_user_by_email(email)
                 print("email_")
                 print(email_)
