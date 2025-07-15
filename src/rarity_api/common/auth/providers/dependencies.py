@@ -62,8 +62,9 @@ async def authenticate_yandex(
     async with aiohttp.ClientSession() as session:
         async with session.get(url, headers=headers) as response:
             data = await response.json()
-            # email = data.get("default_email")
-            email = "artem@yandex.ru"
+            email = data.get("default_email")
+            if not email:
+                raise Exception("Email not found")
             existing_user = await auth_service.get_user_by_email(email)
             if existing_user:
                 return existing_user
