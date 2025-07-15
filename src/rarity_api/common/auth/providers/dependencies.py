@@ -62,18 +62,23 @@ async def authenticate_yandex(
     async with aiohttp.ClientSession() as session:
         async with session.get(url, headers=headers) as response:
             data = await response.json()
+            print(data)
             email = data.get("default_email")
             if not email:
                 raise Exception("Email not found")
             existing_user = await auth_service.get_user_by_email(email)
             if existing_user:
+                print(existing_user)
                 return existing_user
             else:
                 u = UserInfoFromIDProvider(email=EmailStr(email))
                 access_token_data = TokenFromIDProvider(token=id_token),
                 # refresh_token_data = TokenFromIDProvider(token=refresh_token)
                 await auth_service.get_or_create_oidc_user(user_data=u, access_token_data=access_token_data)
-                return await auth_service.get_user_by_email(email)
+                email_ = await auth_service.get_user_by_email(email)
+                print("email_")
+                print(email_)
+                return email_
 
 
 async def rotate_tokens(
