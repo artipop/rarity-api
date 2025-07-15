@@ -14,9 +14,9 @@ router = APIRouter(
 )
 
 
-@router.post("/resend")
-async def resend_verification_email(user: UserRead = Depends(authenticate)):
-    return
+# @router.post("/resend")
+# async def resend_verification_email(user: UserRead = Depends(authenticate)):
+#     return
 
 @router.get("/verify")
 async def verify_email(token: str, session: AsyncSession = Depends(get_session)):
