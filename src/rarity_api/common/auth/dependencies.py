@@ -48,7 +48,7 @@ async def authenticate(
             user.auth_type = 'google'
             return user
         if auth_scheme == AuthType.YANDEX:
-            logger.critical("TRYING AUTH WITH YANDEX")
+            print("TRYING AUTH WITH YANDEX")
             user = await authenticate_yandex(id_token)
             user.auth_type = 'yandex'
             return user
