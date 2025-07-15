@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from typing import Dict
 
 import aiohttp
-from fastapi import Response, Depends, HTTPException
+from fastapi import Response, HTTPException
 from jose import jwt, JWTError
 from pydantic import EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -72,7 +72,7 @@ async def authenticate_yandex(
                 return existing_user
             else:
                 print("!!!")
-                u = UserInfoFromIDProvider(email=EmailStr(email))
+                u = UserInfoFromIDProvider(email=email)
                 access_token_data = TokenFromIDProvider(token=id_token),
                 # refresh_token_data = TokenFromIDProvider(token=refresh_token)
                 await auth_service.get_or_create_oidc_user(user_data=u, access_token_data=access_token_data)
