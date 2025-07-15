@@ -67,7 +67,8 @@ class UserRepository(AbstractRepository):
             return existing_user
 
         # created_user = await self.create(UserCreate(email=user_data.email))
-        query = insert(models.User).values(email=user_data.email).returning(models.User)
+        dump = UserCreate(email=user_data.email).model_dump()
+        query = insert(models.User).values(dump).returning(models.User)
         result = await self._session.execute(query)
         await self._session.commit()
         return result.scalars().first()
