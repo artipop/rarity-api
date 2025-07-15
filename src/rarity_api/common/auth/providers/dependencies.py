@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from typing import Dict
 
 import aiohttp
-from fastapi import Response, HTTPException
+from fastapi import Response, Depends, HTTPException
 from jose import jwt, JWTError
 from pydantic import EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession

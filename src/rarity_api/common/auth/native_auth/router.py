@@ -3,7 +3,7 @@ from rarity_api.common.auth.schemas.token import TokenType
 from rarity_api.common.auth.schemas.user import UserRead
 from rarity_api.common.auth.services.auth_service import AuthService
 from rarity_api.core.database.connector import get_session
-from rarity_api.common.auth.native_auth.dependencies import validate_auth_user, authenticate
+from rarity_api.common.auth.native_auth.dependencies import valiadate_auth_user, authenticate
 from rarity_api.common.auth.native_auth.schemas.user import UserCreatePlainPassword, UserCreateHashedPassword, UserChangePassword
 from rarity_api.common.auth.native_auth.utils.jwt_helpers import create_access_token, create_refresh_token
 from rarity_api.common.auth.native_auth.utils.password_helpers import hash_password
@@ -39,7 +39,7 @@ async def register_user(
     return registred_user_data
 
 
-@router.put("/password", response_model=UserRead)
+@router.put("/password")
 async def change_password(
         data: UserChangePassword,
         session=Depends(get_session),
@@ -60,7 +60,7 @@ async def change_password(
 @router.post("/login")
 async def auth_user_issue_jwt(
         response: Response,
-        user: UserRead = Depends(validate_auth_user),
+        user: UserRead = Depends(valiadate_auth_user),
         session=Depends(get_session)
 ):
     id_token = create_access_token(user)

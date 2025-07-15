@@ -109,7 +109,7 @@ def validate_token_type(payload: Dict, token_type: TokenType) -> bool:
 
 async def logout(
         id_token_payload: Dict,
-        session: AsyncSession,
+        session=Depends(get_session)
 ):
     deleted_tokens = await AuthService(session).logout_native_user(
         user_id=id_token_payload.get("sub", "")
