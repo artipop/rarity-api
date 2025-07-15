@@ -39,7 +39,7 @@ async def register_user(
     return registred_user_data
 
 
-@router.put("/password")
+@router.put("/password", response_model=UserRead)
 async def change_password(
         data: UserChangePassword,
         session=Depends(get_session),
