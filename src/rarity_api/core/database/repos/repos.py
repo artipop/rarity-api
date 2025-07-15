@@ -1,6 +1,6 @@
 from typing import Sequence
 from uuid import UUID
-from sqlalchemy import and_, exists, or_, select, update, delete
+from sqlalchemy import and_, exists, or_, select, update, delete, insert
 from sqlalchemy.orm import selectinload
 
 from rarity_api.common.auth.schemas.auth_credentials import AuthCredentialsCreate
@@ -67,7 +67,8 @@ class UserRepository(AbstractRepository):
             return existing_user
 
         # created_user = await self.create(UserCreate(email=user_data.email))
-        result = await self._session.execute(UserCreate(email=user_data.email))
+        query = insert(models.User).values(email=user_data.email).returning(models.User)
+        result = await self._session.execute(query)
         await self._session.commit()
         return result.scalars().first()
 
