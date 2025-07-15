@@ -258,10 +258,10 @@ async def mark_favourite(
 @router.get("/favourites")
 async def list_favourites(
         session: AsyncSession = Depends(get_session),
-
         user: UserRead = Depends(authenticate)
 ) -> List[ItemData]:
-    user_id: int = user.id
+    print(type(user))
+    user_id = user.id
     repository = UserFavouritesRepository(session)
     favs = await repository.get_user_fav_by_filter(user_id=user_id)
     repository = ItemRepository(session)
