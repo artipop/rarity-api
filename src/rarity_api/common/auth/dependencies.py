@@ -39,7 +39,6 @@ async def authenticate(
         session=Depends(get_session),
         # TODO(weldonfe): determine type hint here, maybe posgresql.async_session or smth?...
 ):
-    print(id_token)
     id_token, id_token_payload, auth_scheme = preprocess_auth(request=request, id_token=id_token)
     logger.critical(auth_scheme)
     try:
