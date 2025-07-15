@@ -66,9 +66,12 @@ class UserRepository(AbstractRepository):
         if existing_user:
             return existing_user
 
-        created_user = await self.create(UserCreate(email=user_data.email))
+        # created_user = await self.create(UserCreate(email=user_data.email))
+        result = await self._session.execute(UserCreate(email=user_data.email))
+        await self._session.commit()
+        return result.scalars().first()
 
-        return created_user
+        # return created_user
 
     async def get_native_user_with_creds_by_email(self, email: str):
         query = (
