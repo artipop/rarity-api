@@ -41,24 +41,24 @@ async def authenticate(
 ):
     id_token, id_token_payload, auth_scheme = preprocess_auth(request=request, id_token=id_token)
     logger.critical(auth_scheme)
-    try:
-        if auth_scheme == AuthType.GOOGLE:
-            logger.critical("TRYING AUTH WITH GOOGLE")
-            user = await authenticate_google(id_token, response, session)
-            user.auth_type = 'google'
-            return user
-        if auth_scheme == AuthType.YANDEX:
-            print("TRYING AUTH WITH YANDEX")
-            user = await authenticate_yandex(id_token)
-            user.auth_type = 'yandex'
-            return user
-        elif auth_scheme == AuthType.NATIVE:
-            logger.critical("TRYING AUTH WITH NATIVE")
-            user = await authenticate_native(id_token, response, session)
-            user.auth_type = 'email'
-            return user
-    except Exception as e:  # TODO(weldonfe): need to specify wich exceptions can be raised here
-        logger.critical(e)
-        raise AuthException(
-            detail="Not authenticated"
-        )
+    # try:
+    if auth_scheme == AuthType.GOOGLE:
+        logger.critical("TRYING AUTH WITH GOOGLE")
+        user = await authenticate_google(id_token, response, session)
+        user.auth_type = 'google'
+        return user
+    if auth_scheme == AuthType.YANDEX:
+        print("TRYING AUTH WITH YANDEX")
+        user = await authenticate_yandex(id_token)
+        user.auth_type = 'yandex'
+        return user
+    elif auth_scheme == AuthType.NATIVE:
+        logger.critical("TRYING AUTH WITH NATIVE")
+        user = await authenticate_native(id_token, response, session)
+        user.auth_type = 'email'
+        return user
+    # except Exception as e:  # TODO(weldonfe): need to specify wich exceptions can be raised here
+    #     logger.critical(e)
+    #     raise AuthException(
+    #         detail="Not authenticated"
+    #     )
