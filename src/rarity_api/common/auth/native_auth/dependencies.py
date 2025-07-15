@@ -1,6 +1,7 @@
 from typing import Dict
 
 from fastapi import Depends, Response
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from rarity_api.common.auth.exceptions import AuthException
 from rarity_api.common.auth.native_auth.schemas.user import UserLogin, UserFromToken
@@ -18,7 +19,7 @@ from rarity_api.common.logger import logger
 from rarity_api.core.database.connector import get_session
 
 
-async def authenticate(id_token: str, response: Response, session=Depends(get_session)) -> UserRead:
+async def authenticate(id_token: str, response: Response, session: AsyncSession) -> UserRead:
     try:
         payload = decode_jwt(id_token)
 
@@ -44,7 +45,7 @@ async def authenticate(id_token: str, response: Response, session=Depends(get_se
     return user_from_db
 
 
-async def valiadate_auth_user(
+async def validate_auth_user(
         user: UserLogin,
         session=Depends(get_session)
 ):

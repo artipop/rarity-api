@@ -2,9 +2,10 @@ from datetime import datetime, timezone
 from typing import Dict
 
 import aiohttp
-from fastapi import Response, Depends, HTTPException
+from fastapi import Response, HTTPException
 from jose import jwt, JWTError
 from pydantic import EmailStr
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from rarity_api.common.auth.exceptions import AuthException
 from rarity_api.common.auth.repositories.user_repository import UserRepository
@@ -25,7 +26,7 @@ state_storage = StateStorage()  # TODO(weldonfe): refactor somehow later, maybe 
 async def authenticate(
         id_token: str,
         response: Response,
-        session=Depends(get_session)
+        session: AsyncSession,
 ):
     unverified_email_claim = jwt.get_unverified_claims(id_token).get("email", "")
     auth_service = AuthService(session)
@@ -52,7 +53,7 @@ async def authenticate(
 
 async def authenticate_yandex(
         id_token: str,
-        sess=Depends(get_session)
+        sess: AsyncSession,
 ) -> UserRead:
     url = 'https://login.yandex.ru/info?format=json'
     headers = {
@@ -164,7 +165,7 @@ async def validate_id_token(
 
 async def logout(
         id_token_payload: Dict,
-        session=Depends(get_session)
+        session: AsyncSession
 ):
     deleted_tokens = await AuthService(session).logout_oidc_user(
         UserInfoFromIDProvider(

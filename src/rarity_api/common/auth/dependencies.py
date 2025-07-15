@@ -49,7 +49,7 @@ async def authenticate(
         return user
     if auth_scheme == AuthType.YANDEX:
         print("TRYING AUTH WITH YANDEX")
-        user = await authenticate_yandex(id_token)
+        user = await authenticate_yandex(id_token, session)
         user.auth_type = 'yandex'
         return user
     elif auth_scheme == AuthType.NATIVE:
@@ -57,6 +57,7 @@ async def authenticate(
         user = await authenticate_native(id_token, response, session)
         user.auth_type = 'email'
         return user
+    return None
     # except Exception as e:  # TODO(weldonfe): need to specify wich exceptions can be raised here
     #     logger.critical(e)
     #     raise AuthException(
