@@ -229,7 +229,7 @@ class UserFavouritesRepository(AbstractRepository):
             )
         )
         result = await self._session.execute(query)
-        return result.scalars().first()
+        return result.scalars().all()
 
 class ItemRepository(AbstractRepository):
     model = Item
