@@ -273,7 +273,7 @@ class ItemRepository(AbstractRepository):
         # Фильтрация по символу через подзапрос
         if symbol_name:
             symbol_subq = (
-                select(SymbolRp.rp_id)
+                select(SymbolRp.rp)
                 .join(Symbol, Symbol.id == SymbolRp.symbol_id)
                 .join(SymbolsLocale, SymbolsLocale.symbol_id == Symbol.id)
                 .where(or_(
