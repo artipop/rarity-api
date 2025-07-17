@@ -208,7 +208,7 @@ class ManufacturerCityRepository(AbstractRepository):
 class UserFavouritesRepository(AbstractRepository):
     model = models.UserFavourites
 
-    async def mark_unfav(self, item_id: int, user_id: int):
+    async def mark_unfav(self, item_id: int, user_id: UUID):
         query = (
             delete(self.model)
             .where(and_(

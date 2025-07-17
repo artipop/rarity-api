@@ -56,7 +56,7 @@ async def list_favourites(
     favs = await repository.get_user_fav_by_filter(user_id=user_id)
     repository = ItemRepository(session)
     items = [await repository.find_by_id(fav.item_id) for fav in favs]
-    return [mapping(item) for item in items]
+    return [mapping(item, True) for item in items]
 
 
 @router.put("/{item_id}")
@@ -253,13 +253,13 @@ async def mark_favourite(
     repository = UserFavouritesRepository(session)
     item_repo = ItemRepository(session)
     item = await item_repo.find_by_id(item_id)
-    fav_row = await repository.get_user_fav_by_filter(user_id=user_id, item_id=item_id)
     if not item:
         raise HTTPException(
             status_code=400,
             detail="Item not found"
         )
 
+    fav_row = await repository.get_user_fav_by_filter(user_id=user_id, item_id=item_id)
     if fav_row:
         await repository.mark_unfav(item_id=item_id, user_id=user_id)
 
@@ -317,7 +317,7 @@ async def find_by_image(
     return [mapping(item) for item in items]
 
 
-def mapping(item: Item) -> ItemData:
+def mapping(item: Item, fav: bool = False) -> ItemData:
     years_array = item.production_years.split(" - ")
 #    years_end = int(years_array[1]) if (len(years_array > 0 and years_array[1] != "now") else 0
     years_end = int(years_array[1].strip()) if (years_array[1] != "now") else 0
@@ -330,7 +330,8 @@ def mapping(item: Item) -> ItemData:
         year_from=int(years_array[0] if years_array[0] != "None" else 0),
         year_to=years_end,
         image=f"{item.rp}" if item.rp else None,
-        source=item.source
+        source=item.source,
+        is_favourite=fav
     )
 
 def full_mapping(item: Item): # -> ItemFullData:

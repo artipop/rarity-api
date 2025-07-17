@@ -1,28 +1,23 @@
-from datetime import datetime
-
-from typing import List, Optional
 import uuid
+from datetime import datetime
+from typing import List, Optional
+
 from pydantic import EmailStr
 from sqlalchemy import (
-    TIMESTAMP, 
-    Boolean, 
-    Column, 
-    Integer, 
-    LargeBinary, 
-    String, 
-    ForeignKey, 
-    Table, 
-    DateTime, 
-    UniqueConstraint, 
+    TIMESTAMP,
+    Boolean,
+    Integer,
+    LargeBinary,
+    String,
+    ForeignKey,
+    DateTime,
+    UniqueConstraint,
     func,
     UUID
 )
 from sqlalchemy.orm import declarative_base, relationship, Mapped, mapped_column
 
-from rarity_api.core.database.repos.abstract_repo import AbstractRepository
-
 Base = declarative_base()
-
 
 
 class ManufacturerCity(Base):
@@ -30,9 +25,10 @@ class ManufacturerCity(Base):
 
     manufacturer_id: Mapped[int] = mapped_column(ForeignKey("manufacturers.id"), primary_key=True)
     city_id: Mapped[int] = mapped_column(ForeignKey("cities.id"), primary_key=True)
-    
+
     manufacturer: Mapped["Manufacturer"] = relationship("Manufacturer", back_populates="cities")
     city: Mapped["City"] = relationship("City", back_populates="manufacturers")
+
 
 class User(Base):
     __tablename__ = 'users'
@@ -52,8 +48,6 @@ class User(Base):
     favourites: Mapped[List["UserFavourites"]] = relationship("UserFavourites", back_populates="user")
 
 
-
-
 class AuthCredentials(Base):
     __tablename__ = 'auth_credentials'
     id: Mapped[UUID] = mapped_column(UUID, primary_key=True, default=uuid.uuid4)
@@ -69,18 +63,21 @@ class AuthCredentials(Base):
         UniqueConstraint('auth_type', 'user_id', name='uq_auth_type_user'),
     )
 
+
 class Country(Base):
     __tablename__ = 'countries'
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(unique=True)
     regions: Mapped[List["Region"]] = relationship("Region", back_populates="country")
-    
+
+
 class Manufacturer(Base):
     __tablename__ = 'manufacturers'
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str]
     cities: Mapped[List["ManufacturerCity"]] = relationship("ManufacturerCity", back_populates="manufacturer")
     items: Mapped["Item"] = relationship("Item", back_populates="manufacturer")
+
 
 class UserFavourites(Base):
     __tablename__ = 'user_favourites'
@@ -89,6 +86,7 @@ class UserFavourites(Base):
     item_id: Mapped[int] = mapped_column(Integer, ForeignKey('items.id'), nullable=False)
     item: Mapped["Item"] = relationship("Item", back_populates="favourites")
     user: Mapped["User"] = relationship("User", back_populates="favourites")
+
 
 class Item(Base):
     __tablename__ = 'items'
@@ -103,6 +101,7 @@ class Item(Base):
     manufacturer: Mapped["Manufacturer"] = relationship("Manufacturer", back_populates="items")
     source: Mapped[Optional[str]]
     favourites: Mapped[List["UserFavourites"]] = relationship("UserFavourites", back_populates="item")
+
 
 class Token(Base):
     __tablename__ = 'tokens'
@@ -131,9 +130,7 @@ class City(Base):
 
     region_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey('regions.id'), nullable=True)
     region: Mapped["Region"] = relationship("Region", back_populates="cities")
-    manufacturers: Mapped[List["ManufacturerCity"]] = relationship("ManufacturerCity",  back_populates="city")
-
-
+    manufacturers: Mapped[List["ManufacturerCity"]] = relationship("ManufacturerCity", back_populates="city")
 
 
 class SearchHistory(Base):
@@ -144,6 +141,7 @@ class SearchHistory(Base):
     country_name: Mapped[Optional[str]]
     manufacturer_name: Mapped[Optional[str]]
     created_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), default=func.now())
+
 
 class Subscription(Base):
     __tablename__ = 'subscriptions'
@@ -158,6 +156,7 @@ class Subscription(Base):
     user_id: Mapped[UUID] = mapped_column(UUID, ForeignKey('users.id'))
     user = relationship('User', back_populates='subscription')
 
+
 class Symbol(Base):
     __tablename__ = "symbols"
     id: Mapped[UUID] = mapped_column(UUID, primary_key=True, default=uuid.uuid4)
@@ -165,6 +164,8 @@ class Symbol(Base):
 
     rps: Mapped[List["SymbolRp"]] = relationship("SymbolRp", back_populates="symbol")
     locales: Mapped[List["SymbolsLocale"]] = relationship("SymbolsLocale", back_populates="symbol")
+
+
 class SymbolRp(Base):
     __tablename__ = "symbols_rp"
     id: Mapped[UUID] = mapped_column(UUID, primary_key=True, default=uuid.uuid4)
