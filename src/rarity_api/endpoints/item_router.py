@@ -317,6 +317,47 @@ async def find_by_image(
     return [mapping(item) for item in items]
 
 
+@router.post("/find_by_image/length")
+async def find_by_image_len(
+        data: FindByImageData,
+        region_name: str = None,
+        country_name: str = None,
+        manufacturer_name: str = None,
+        symbol_name: str = None,
+        session: AsyncSession = Depends(get_session)
+):
+    key = get_cache_key(data.base64)
+
+    if key not in cache:
+        # Вызов нейросети только если нет в кеше
+        response = requests.post(
+            # TODO: use env for llm URL
+            'http://host.docker.internal:8505/recognize',
+            json={'image': data.base64}
+        )
+        if response.status_code != 200:
+            return Response(status_code=response.status_code)
+        data = response.json()
+        if data['status'] != 'success':
+            return Response(status_code=400)
+        cache[key] = data['results'] if data['results'] else []
+
+    results = cache[key]
+    repository = ItemRepository(session)
+    book_ids: list[int] = [
+        int(result['template'].split('/')[-1].split('_')[1].split('.')[0])
+        for result in results
+    ]
+    print(book_ids)
+    items = await repository.find_items(page=None, offset=None,
+                                        region=region_name, country=country_name, manufacturer=manufacturer_name,
+                                        symbol_name=symbol_name,
+                                        book_ids=book_ids)
+    return {
+        "total": len(items),
+    }
+
+
 def mapping(item: Item, fav: bool = False) -> ItemData:
     years_array = item.production_years.split(" - ")
 #    years_end = int(years_array[1]) if (len(years_array > 0 and years_array[1] != "now") else 0
