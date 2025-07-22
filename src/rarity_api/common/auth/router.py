@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, Response, Request
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from rarity_api.common.auth.dependencies import preprocess_auth, authenticate
 from rarity_api.common.auth.providers.dependencies import logout as logout_google
@@ -7,6 +8,7 @@ from rarity_api.common.auth.schemas.user import UserRead
 from rarity_api.common.auth.utils import AuthType
 from rarity_api.common.logger import logger
 from rarity_api.core.database.connector import get_session
+from rarity_api.core.database.repos.repos import UserRepository
 
 router = APIRouter(
     prefix="/common-auth",
@@ -50,6 +52,8 @@ async def auth_user_check_self_info(
 # TODO:
 @router.delete("/users/me/")
 async def delete_current_user(
-        user: UserRead = Depends(authenticate)
+        user: UserRead = Depends(authenticate),
+        session: AsyncSession = Depends(get_session)
 ):
-    print(type(user))
+    repository = UserRepository(session)
+    return await repository.delete_user(user.id)
