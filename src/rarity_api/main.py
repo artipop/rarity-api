@@ -29,6 +29,7 @@ from rarity_api.endpoints.user_router import router as user_router
 from rarity_api.endpoints.payment_router import router as payment_router
 from rarity_api.settings import settings
 from rarity_api.common.auth.yandex_auth.router import router as yandex_router
+from rarity_api.common.auth.router import router as common_user_router
 from rarity_api.endpoints.archive_router import router as archive_router
 from starlette.middleware.cors import CORSMiddleware
 
@@ -57,6 +58,7 @@ app.include_router(manufacturer_router)
 app.include_router(item_router)
 app.include_router(search_history_router)
 app.include_router(yandex_router)
+app.include_router(common_user_router)
 app.include_router(user_router)
 app.include_router(payment_router)
 app.include_router(verification_router)
