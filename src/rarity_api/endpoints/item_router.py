@@ -3,7 +3,7 @@ from typing import List, Annotated
 
 import cachetools
 import requests
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Form
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -274,7 +274,7 @@ cache = cachetools.TTLCache(maxsize=1000, ttl=300)
 
 @router.post("/find_by_image")
 async def find_by_image(
-        data: FindByImageData,
+        base64: str = Form(...),
         page: int = 1,
         offset: int = 10,
         region_name: str = None,
@@ -283,14 +283,19 @@ async def find_by_image(
         symbol_name: str = None,
         session: AsyncSession = Depends(get_session)
 ):
-    key = get_cache_key(data.base64)
+    if not base64:
+        raise HTTPException(
+            status_code=422,
+            detail="Field 'base64' is required and must be a string"
+        )
+    key = get_cache_key(base64)
 
     if key not in cache:
         # Вызов нейросети только если нет в кеше
         response = requests.post(
             # TODO: use env for llm URL
             'http://host.docker.internal:8505/recognize',
-            json={'image': data.base64}
+            json={'image': base64}
         )
         if response.status_code != 200:
             return Response(status_code=response.status_code)
@@ -319,21 +324,26 @@ async def find_by_image(
 
 @router.post("/find_by_image/length")
 async def find_by_image_len(
-        data: FindByImageData,
+        base64: str = Form(...),
         region_name: str = None,
         country_name: str = None,
         manufacturer_name: str = None,
         symbol_name: str = None,
         session: AsyncSession = Depends(get_session)
 ):
-    key = get_cache_key(data.base64)
+    if not base64:
+        raise HTTPException(
+            status_code=422,
+            detail="Field 'base64' is required and must be a string"
+        )
+    key = get_cache_key(base64)
 
     if key not in cache:
         # Вызов нейросети только если нет в кеше
         response = requests.post(
             # TODO: use env for llm URL
             'http://host.docker.internal:8505/recognize',
-            json={'image': data.base64}
+            json={'image': base64}
         )
         if response.status_code != 200:
             return Response(status_code=response.status_code)
