@@ -1,4 +1,4 @@
-from typing import Sequence
+from typing import Sequence, List
 from uuid import UUID
 from sqlalchemy import and_, exists, or_, select, update, delete, insert
 from sqlalchemy.orm import selectinload
@@ -240,7 +240,7 @@ class ItemRepository(AbstractRepository):
         offset: int,
         region: str | None = None,
         country: str | None = None,
-        manufacturer: str | None = None,
+        manufacturers: List[str] | None = None,
         symbol_name: str | None = None,
         book_ids: list[int] | None = None,
     ):
@@ -267,8 +267,8 @@ class ItemRepository(AbstractRepository):
             stmt = stmt.where(exists(location_exists))
 
         # Фильтрация по производителю
-        if manufacturer:
-            stmt = stmt.where(Manufacturer.name == manufacturer)
+        if manufacturers:
+            stmt = stmt.where(Manufacturer.name.in_(manufacturers))
 
         # Фильтрация по символу через подзапрос
         if symbol_name:

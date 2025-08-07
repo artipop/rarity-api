@@ -3,7 +3,7 @@ from typing import List, Annotated
 
 import cachetools
 import requests
-from fastapi import APIRouter, Depends, HTTPException, Form
+from fastapi import APIRouter, Depends, HTTPException, Form, Query, Request
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -113,21 +113,19 @@ async def get_items(
         offset: int = 50,
         region_name: str = None,
         country_name: str = None,
-        manufacturer_name: str = None,
+        manufacturer_name: List[str] = Query(default=[]),
         symbol_name: str = None,
-        # from_date: str = None,
-        # to_date: str = None,
         session: AsyncSession = Depends(get_session)
 ) -> List[ItemData]:
     # Save search history
     # TODO: если идентичный поиск уже был, то обновить дату поиска просто (поднять вверх по сути)
-    search_history = SearchHistory(
-        region_name=region_name if region_name else "",
-        country_name=country_name,
-        manufacturer_name=manufacturer_name
-    )
+    # search_history = SearchHistory(
+    #     region_name=region_name if region_name else "",
+    #     country_name=country_name,
+    #     manufacturer_name=manufacturer_name
+    # )
     history_repository = SearchHistoryRepository(session)
-    await history_repository.create(search_history)
+    # await history_repository.create(search_history)
     repository = ItemRepository(session)
     items = await repository.find_items(page, offset, region=region_name, country=country_name, manufacturer=manufacturer_name, symbol_name=symbol_name)
     return [mapping(item) for item in items]
@@ -178,15 +176,18 @@ async def find_symbols(
         .where(Manufacturer.name.icontains(query))
     )
 
+    ru_match = SymbolsLocale.locale_ru.icontains(query)
+    de_match = SymbolsLocale.locale_de.icontains(query)
+    en_match = SymbolsLocale.locale_en.icontains(query)
+    translit_match = SymbolsLocale.translit.icontains(query)
     symbol_query = (
         select(SymbolsLocale)
         .join(Symbol, Symbol.id == SymbolsLocale.symbol_id)
         .where(or_(
-            SymbolsLocale.locale_de.icontains(query),
-            SymbolsLocale.locale_en.icontains(query),
-            SymbolsLocale.locale_ru.icontains(query),
-            SymbolsLocale.translit.icontains(query)
-
+            ru_match,
+            de_match,
+            en_match,
+            translit_match
         ))
         .options(selectinload(SymbolsLocale.symbol))
     )
@@ -274,7 +275,8 @@ cache = cachetools.TTLCache(maxsize=1000, ttl=300)
 
 @router.post("/find_by_image")
 async def find_by_image(
-        base64: str = Form(...),
+        # base64: str = Form(...),
+        request: Request,
         page: int = 1,
         offset: int = 10,
         region_name: str = None,
@@ -283,6 +285,8 @@ async def find_by_image(
         symbol_name: str = None,
         session: AsyncSession = Depends(get_session)
 ):
+    form = await request.form(max_part_size=10 * 1024 * 1024)
+    base64 = form.get("base64")
     if not base64:
         raise HTTPException(
             status_code=422,
