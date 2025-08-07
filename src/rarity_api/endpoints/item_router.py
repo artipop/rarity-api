@@ -135,14 +135,12 @@ async def get_items(
 async def items_length(
         region_name: str = None,
         country_name: str = None,
-        manufacturer_name: str = None,
+        manufacturer_name: List[str] = Query(default=[]),
         symbol_name: str = None,
-        # from_date: str = None,
-        # to_date: str = None,
         session: AsyncSession = Depends(get_session)
 ):
     repository = ItemRepository(session)
-    items = await repository.find_items(page=None, offset=None, region=region_name, country=country_name, manufacturer=manufacturer_name, symbol_name=symbol_name)
+    items = await repository.find_items(page=None, offset=None, region=region_name, country=country_name, manufacturers=manufacturer_name, symbol_name=symbol_name)
     return {
         "total": len(items),
     }
