@@ -127,7 +127,7 @@ async def get_items(
     history_repository = SearchHistoryRepository(session)
     # await history_repository.create(search_history)
     repository = ItemRepository(session)
-    items = await repository.find_items(page, offset, region=region_name, country=country_name, manufacturer=manufacturer_name, symbol_name=symbol_name)
+    items = await repository.find_items(page, offset, region=region_name, country=country_name, manufacturers=manufacturer_name, symbol_name=symbol_name)
     return [mapping(item) for item in items]
 
 
