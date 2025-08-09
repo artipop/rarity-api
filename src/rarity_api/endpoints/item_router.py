@@ -204,6 +204,53 @@ async def find_symbols(
     )
 
 
+@router.get("/newsearch", response_model=None)
+async def new_find_symbols(
+        query: str = None,
+        session: AsyncSession = Depends(get_session),
+) -> SearchResponse:
+    country_query = (
+        select(Country.name)
+#        .where(Country.name.ilike(f"%{query}%"))
+        .where(Country.name.icontains(query))
+    )
+
+    manufacturer_query = (
+        select(Manufacturer.name)
+#        .where(Manufacturer.name.ilike(f"%{query}%"))
+        .where(Manufacturer.name.icontains(query))
+    )
+
+    ru_match = SymbolsLocale.locale_ru.icontains(query)
+    de_match = SymbolsLocale.locale_de.icontains(query)
+    en_match = SymbolsLocale.locale_en.icontains(query)
+    translit_match = SymbolsLocale.translit.icontains(query)
+    symbol_query = (
+        select(SymbolsLocale)
+        .join(Symbol, Symbol.id == SymbolsLocale.symbol_id)
+        .where(or_(
+            ru_match,
+            de_match,
+            en_match,
+            translit_match
+        ))
+        .options(selectinload(SymbolsLocale.symbol))
+    )
+
+    country_result = await session.execute(country_query)
+    manufacturer_result = await session.execute(manufacturer_query)
+    symbol_result = await session.execute(symbol_query)
+
+    countries = country_result.scalars().all()
+    manufacturers = manufacturer_result.scalars().all()
+    symbols_locale: SymbolsLocale = symbol_result.scalars().all()
+    return SearchResponse(
+        countries=countries,
+        manufacturers=manufacturers,
+        symbols=[symbol.symbol.name for symbol in symbols_locale]
+    )
+
+
 # @router.get("/search")
 # async def find_symbols(
 #         query: str = None,
@@ -318,7 +365,8 @@ async def find_by_image(
     ]
     print(book_ids)
     items = await repository.find_items(page, offset,
-                                        region=region_name, country=country_name, manufacturer=manufacturer_name,
+                                        region=region_name, country=country_name,
+                                        manufacturers=[manufacturer_name] if manufacturer_name else None,
                                         symbol_name=symbol_name,
                                         book_ids=book_ids)
     return [mapping(item) for item in items]
@@ -362,7 +410,8 @@ async def find_by_image_len(
     ]
     print(book_ids)
     items = await repository.find_items(page=None, offset=None,
-                                        region=region_name, country=country_name, manufacturer=manufacturer_name,
+                                        region=region_name, country=country_name,
+                                        manufacturers=[manufacturer_name] if manufacturer_name else None,
                                         symbol_name=symbol_name,
                                         book_ids=book_ids)
     return {
